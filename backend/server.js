@@ -142,8 +142,10 @@ io.on('connection', (socket) => {
         const AIBot = require('./core/AIBot');
         const bots = AIBot.generateBots(room.players.length, 4);
         room.players.push(...bots);
-        io.to(roomCode).emit('room_updated', room);
       }
+
+      // Всегда отправляем обновленный список игроков и новый статус (чтобы переключился экран)
+      io.to(roomCode).emit('room_updated', room);
 
       console.log(`Игра в комнате ${roomCode} началась с ${room.players.length} игроками!`);
       
