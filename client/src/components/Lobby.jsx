@@ -48,9 +48,8 @@ export default function Lobby({ roomData, onStart, isHost }) {
             className="btn-primary" 
             style={{ width: '100%' }}
             onClick={onStart}
-            disabled={roomData.players.length < 4}
           >
-            {roomData.players.length < 4 ? `Ожидаем еще ${4 - roomData.players.length} игроков` : 'Начать игру'}
+            {roomData.players.length < 4 ? `Начать с ботами (не хватает ${4 - roomData.players.length})` : 'Начать игру'}
           </button>
         ) : (
           <p className="text-secondary" style={{ textAlign: 'center', fontSize: '0.9rem' }}>
