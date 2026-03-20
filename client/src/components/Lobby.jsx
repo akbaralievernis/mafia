@@ -14,6 +14,16 @@ export default function Lobby({ roomData, onStart, isHost }) {
       >
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Комната: <span style={{ color: 'var(--accent-red)' }}>{roomData.id}</span></h2>
+          <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+             <div style={{ background: '#fff', padding: '10px', borderRadius: '8px' }}>
+               <img 
+                 src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/?room=' + roomData.id)}`}
+                 alt="QR Code for joining"
+                 width="150"
+                 height="150"
+               />
+             </div>
+          </div>
           <p className="text-secondary" style={{ marginTop: '0.5rem' }}>Ожидание игроков...</p>
         </div>
 

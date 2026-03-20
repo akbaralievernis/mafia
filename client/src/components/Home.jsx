@@ -16,6 +16,15 @@ export default function Home() {
     }
   }, [roomData, navigate]);
 
+  // Читаем код из URL, если перешли по QR коду или прямой ссылке
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roomParam = params.get('room');
+    if (roomParam) {
+      setCode(roomParam.toUpperCase());
+    }
+  }, []);
+
   const handleJoin = () => {
     if (!name.trim()) return alert("Введите имя!");
     if (!socket) return alert("Нет подключения к серверу");

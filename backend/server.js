@@ -21,6 +21,11 @@ app.use(cors({
   credentials: true
 }));
 
+// Простой эндпоинт для поддержания сервера в активном состоянии (Keep-Alive)
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -107,6 +112,12 @@ io.on('connection', (socket) => {
     room.players.push(player);
     socket.join(roomCode);
 
+    // Отменяем таймер уничтожения комнаты, если кто-то зашел
+    if (room.destroyTimer) {
+      clearTimeout(room.destroyTimer);
+      delete room.destroyTimer;
+    }
+
     console.log(`Игрок ${playerName} присоединился к комнате ${roomCode}`);
 
     // Уведомляем ВСЕХ игроков в комнате об обновлении списка
@@ -188,10 +199,15 @@ io.on('connection', (socket) => {
         
         console.log(`Игрок ${disconnectedPlayer.name} покинул комнату ${roomCode}`);
 
-        // Если комната пуста — удаляем
+        // Если комната пуста — даем 10 минут на переподключение перед полным удалением
         if (room.players.length === 0) {
-          rooms.delete(roomCode);
-          console.log(`Комната ${roomCode} удалена (пустая)`);
+          console.log(`Комната ${roomCode} опустела. Ожидание 10 минут перед удалением...`);
+          room.destroyTimer = setTimeout(() => {
+            if (rooms.has(roomCode) && rooms.get(roomCode).players.length === 0) {
+              rooms.delete(roomCode);
+              console.log(`Комната ${roomCode} удалена окончательно (истек таймер)`);
+            }
+          }, 10 * 60 * 1000);
         } else {
           // Если вышел хост, назначаем нового (первого в списке)
           if (disconnectedPlayer.isHost) {
