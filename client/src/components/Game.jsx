@@ -5,7 +5,13 @@ import { Moon, Sun, ShieldAlert, Check } from 'lucide-react';
 export default function Game({ gameState, myId, onAction }) {
   const [selectedId, setSelectedId] = useState(null);
 
-  if (!gameState) return null;
+  if (!gameState || !gameState.roles || !gameState.alivePlayers) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <h2 style={{ color: 'var(--accent-red)', animation: 'pulse 2s infinite' }}>Подготовка ролей...</h2>
+      </div>
+    );
+  }
 
   const { phase, round, alivePlayers, players, roles } = gameState;
   const myRole = roles[myId] || 'Скрыто';
