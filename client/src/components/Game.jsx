@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Moon, Sun, ShieldAlert, Check } from 'lucide-react';
 
 export default function Game({ gameState, myId, onAction }) {
   const [selectedId, setSelectedId] = useState(null);
+  const [hasActed, setHasActed] = useState(false);
+
+  // Сброс выбора при смене фазы
+  useEffect(() => {
+    setHasActed(false);
+    setSelectedId(null);
+  }, [gameState?.phase]);
 
   if (!gameState || !gameState.roles || !gameState.alivePlayers) {
     return (
@@ -34,7 +41,7 @@ export default function Game({ gameState, myId, onAction }) {
   const confirmAction = () => {
     if (selectedId) {
       onAction(selectedId);
-      // Если это просто голос, можно и не сбрасывать, но для визуала оставим выбранным
+      setHasActed(true);
     }
   };
 
@@ -153,7 +160,7 @@ export default function Game({ gameState, myId, onAction }) {
 
       {/* Кнопка подтверждения действий, если игрок кого-то выбрал */}
       <AnimatePresence>
-        {selectedId && canSelect && (
+        {selectedId && canSelect && !hasActed && (
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -163,6 +170,18 @@ export default function Game({ gameState, myId, onAction }) {
             <button className="btn-primary" style={{ padding: '1rem 3rem', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(255, 42, 95, 0.4)' }} onClick={confirmAction}>
               Подтвердить выбор
             </button>
+          </motion.div>
+        )}
+        
+        {hasActed && (
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 100 }}
+          >
+            <div style={{ background: 'var(--glass-bg)', padding: '1rem 2rem', borderRadius: '30px', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontWeight: 600 }}>
+               Действие принято. Ожидаем остальных...
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
