@@ -23,10 +23,14 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('game_started', (data) => {
       setRoomData(prev => ({ ...prev, ...data }));
       if (data.event) {
-        setGameEvent(data);
-        // Clear event after 5 seconds
+        setGameEvent(data.event);
         setTimeout(() => setGameEvent(null), 5000);
       }
+    });
+
+    // Обработка обновлений стейта игры (рассылается сервером)
+    newSocket.on('state_update', (data) => {
+      setRoomData(prev => ({ ...prev, ...data }));
     });
 
     newSocket.on('game_updated', (data) => {
@@ -36,6 +40,17 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('room_updated', (data) => {
       setRoomData(prev => prev ? { ...prev, ...data } : data);
     });
+
+    // Обработка игровых событий и тостов
+    const handleGameEvent = (data) => {
+      setGameEvent(data);
+      setTimeout(() => setGameEvent(null), 5000);
+    };
+
+    newSocket.on('day_started', handleGameEvent);
+    newSocket.on('voting_started', handleGameEvent);
+    newSocket.on('voting_result', handleGameEvent);
+    newSocket.on('phase_started', handleGameEvent);
 
     newSocket.on('timer', (time) => {
       setTimer(time);
