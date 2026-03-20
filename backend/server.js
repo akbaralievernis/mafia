@@ -6,12 +6,13 @@ const GameEngine = require('./core/GameEngine');
 
 const app = express();
 
-const allowedOrigins = [
-  'https://project-iaxgt.vercel.app',
-  'https://project-iaxgt-akbaralievernis-akbaralievernis-projects.vercel.app',
-  'http://localhost:5173',
-  'http://localhost:3000'
-];
+const allowedOrigins = (origin, callback) => {
+  if (!origin) return callback(null, true);
+  if (origin.startsWith('http://localhost:') || origin.endsWith('.vercel.app')) {
+    return callback(null, true);
+  }
+  callback(new Error('Not allowed by CORS'));
+};
 
 // Разрешаем CORS для Express (полезно для HTTP-запросов)
 app.use(cors({
