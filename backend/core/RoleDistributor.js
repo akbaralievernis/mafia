@@ -9,11 +9,15 @@ class RoleDistributor {
    * @returns {Object} Словарь ролей { [playerId]: 'role_name' }
    */
   static assignRoles(players) {
-    const count = players.length;
+    // Отделяем хоста (Ведущего) от обычных игроков
+    const hostPlayer = players.find(p => p.isHost);
+    const activePlayers = players.filter(p => !p.isHost);
     
-    // Защита: для полноценной игры с активными ролями нужно минимум 4 человека (в идеале 6+)
+    const count = activePlayers.length;
+    
+    // Защита: для полноценной игры с активными ролями нужно минимум 4 человека (без учета хоста)
     if (count < 4) {
-      throw new Error("Недостаточно игроков для старта игры (минимум 4)");
+      throw new Error("Недостаточно игроков для старта игры (минимум 4 помимо создателя)");
     }
 
     const rolesArray = [];
@@ -40,7 +44,13 @@ class RoleDistributor {
 
     // 5. Формируем словарь привязки ролей к конкретным ID игроков
     const assignedRoles = {};
-    players.forEach((player, index) => {
+    
+    // Хост всегда зритель/ведущий
+    if (hostPlayer) {
+      assignedRoles[hostPlayer.id] = 'spectator';
+    }
+
+    activePlayers.forEach((player, index) => {
       assignedRoles[player.id] = rolesArray[index];
     });
 

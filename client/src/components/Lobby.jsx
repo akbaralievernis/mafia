@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Lobby({ roomData, onStart, isHost }) {
   if (!roomData) return null;
 
+  const hostPlayer = roomData.players.find(p => p.isHost);
+  const normalPlayers = roomData.players.filter(p => !p.isHost);
+
   return (
     <div className="container-center">
       <motion.div 
@@ -28,8 +31,24 @@ export default function Lobby({ roomData, onStart, isHost }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '2rem' }}>
+          {hostPlayer && (
+            <div style={{
+              padding: '1rem',
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--accent-purple)',
+              borderRadius: 'var(--radius-sm)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: '1rem'
+            }}>
+              <span style={{ fontWeight: 600 }}>{hostPlayer.name}</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-purple)', fontWeight: 'bold' }}>ГЛАВНЫЙ ЭКРАН (ВЕДУЩИЙ)</span>
+            </div>
+          )}
+        
+          <h3 style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Игроки ({normalPlayers.length}):</h3>
           <AnimatePresence>
-            {roomData.players.map((p, i) => (
+            {normalPlayers.map((p, i) => (
               <motion.div 
                 key={p.name}
                 initial={{ opacity: 0, x: -20 }}
@@ -47,7 +66,6 @@ export default function Lobby({ roomData, onStart, isHost }) {
                 }}
               >
                 <span style={{ fontWeight: 600 }}>{p.name}</span>
-                {p.isHost && <span style={{ fontSize: '0.8rem', color: 'var(--accent-purple)', fontWeight: 'bold' }}>СОЗДАТЕЛЬ</span>}
               </motion.div>
             ))}
           </AnimatePresence>
@@ -59,7 +77,7 @@ export default function Lobby({ roomData, onStart, isHost }) {
             style={{ width: '100%' }}
             onClick={onStart}
           >
-            {roomData.players.length < 4 ? `Начать с ботами (не хватает ${4 - roomData.players.length})` : 'Начать игру'}
+            {normalPlayers.length < 4 ? `Начать (добавится ${4 - normalPlayers.length} бота)` : 'Начать игру'}
           </button>
         ) : (
           <p className="text-secondary" style={{ textAlign: 'center', fontSize: '0.9rem' }}>

@@ -35,9 +35,10 @@ class GameState {
     if (this.players.find(p => p.id === player.id)) {
       throw new Error("Игрок уже в комнате");
     }
-    
     this.players.push(player);
-    this.alivePlayers.push(player.id);
+    if (!player.isHost) {
+      this.alivePlayers.push(player.id);
+    }
   }
 
   removePlayer(playerId) {
@@ -187,6 +188,10 @@ class GameState {
    */
   _getVisibleRoles(isMafia, myId) {
     const visibleRoles = {};
+    if (this.roles[myId] === 'spectator') {
+      return visibleRoles; // Зритель не видит никаких ролей!
+    }
+
     if (isMafia) {
       // Мафия знает всех остальных мафиози
       Object.keys(this.roles).forEach(id => {

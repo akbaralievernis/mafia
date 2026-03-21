@@ -37,7 +37,7 @@ const RoomRouter = () => {
     return <Lobby roomData={roomData} isHost={isHost} onStart={handleStart} />;
   }
 
-  return <Game gameState={roomData} myId={myId} onAction={handleAction} />;
+  return <Game gameState={roomData} myId={myId} onAction={handleAction} isHost={isHost} />;
 };
 
 function App() {

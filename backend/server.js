@@ -137,17 +137,18 @@ io.on('connection', (socket) => {
     if (player && player.isHost) {
       room.status = 'playing';
 
-      // Если игроков меньше 4, добавляем AI ботов
-      if (room.players.length < 4) {
+      // Если обычных игроков (без создателя) меньше 4, добавляем AI ботов
+      const activePlayersCount = room.players.filter(p => !p.isHost).length;
+      if (activePlayersCount < 4) {
         const AIBot = require('./core/AIBot');
-        const bots = AIBot.generateBots(room.players.length, 4);
+        const bots = AIBot.generateBots(activePlayersCount, 4);
         room.players.push(...bots);
       }
 
       // Всегда отправляем обновленный список игроков и новый статус (чтобы переключился экран)
       io.to(roomCode).emit('room_updated', room);
 
-      console.log(`Игра в комнате ${roomCode} началась с ${room.players.length} игроками!`);
+      console.log(`Игра в комнате ${roomCode} началась! Обычных игроков: ${room.players.length - 1} (плюс 1 Ведущий)`);
       
       // Инициализируем игровой движок
       room.engine = new GameEngine(roomCode, room.players, io);

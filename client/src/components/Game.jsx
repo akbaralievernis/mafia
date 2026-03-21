@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Moon, Sun, ShieldAlert, Check } from 'lucide-react';
+import SpectatorScreen from './SpectatorScreen';
 
-export default function Game({ gameState, myId, onAction }) {
+export default function Game({ gameState, myId, onAction, isHost }) {
+  if (isHost) {
+    return <SpectatorScreen gameState={gameState} />;
+  }
+
   const [selectedId, setSelectedId] = useState(null);
   const [hasActed, setHasActed] = useState(false);
 
