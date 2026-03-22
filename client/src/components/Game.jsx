@@ -10,6 +10,7 @@ export default function Game({ gameState, myId, onAction, isHost }) {
   const [hasActed, setHasActed] = useState(false);
   const [currentVotes, setCurrentVotes] = useState({});
   const [revoteData, setRevoteData] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   // Сброс выбора при смене фазы
   useEffect(() => {
@@ -39,9 +40,14 @@ export default function Game({ gameState, myId, onAction, isHost }) {
       setSelectedId(null);
     });
 
+    socket.on('timer_update', (data) => {
+      setTimeLeft(data.timeLeft);
+    });
+
     return () => {
       socket.off('votes_updated');
       socket.off('revote_started');
+      socket.off('timer_update');
     };
   }, [socket]);
 
@@ -111,6 +117,11 @@ export default function Game({ gameState, myId, onAction, isHost }) {
             </h2>
           </div>
           <p className="text-secondary" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}>Раунд {round}</p>
+          {timeLeft !== null && (
+            <p style={{ marginTop: '0.3rem', fontSize: '1.2rem', fontWeight: 'bold', color: timeLeft <= 10 ? 'var(--accent-red)' : 'var(--accent-blue)' }}>
+              ⏳ Осталось: {timeLeft} сек
+            </p>
+          )}
         </div>
 
         <div style={{ textAlign: 'right' }}>
@@ -212,7 +223,6 @@ export default function Game({ gameState, myId, onAction, isHost }) {
             return (
               <motion.div
                 key={p.id}
-                layout
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: isDead ? 0.4 : 1, y: 0 }}
                 className={`player-card ${isSelected ? 'selected' : ''}`}

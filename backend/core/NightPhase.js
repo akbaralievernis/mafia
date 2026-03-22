@@ -52,6 +52,8 @@ class NightPhase {
     this.timer = setInterval(() => {
       this.timeLeft -= 1;
       
+      this.io.to(this.state.id).emit('timer_update', { timeLeft: this.timeLeft, phase: this.state.phase });
+
       if (this.timeLeft <= 0) {
         this.endNight(); // Авто-завершение/пропуск
       }

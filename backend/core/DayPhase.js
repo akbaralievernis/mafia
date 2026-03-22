@@ -257,8 +257,8 @@ class DayPhase {
 
     this.timer = setInterval(() => {
       this.timeLeft -= 1;
-      // Можно каждую секунду или раз в 5 сек отправлять: 
-      // this.io.to(this.state.id).emit('timer_update', { timeLeft: this.timeLeft });
+      // Отправляем каждую секунду для синхронизации таймера на телефонах
+      this.io.to(this.state.id).emit('timer_update', { timeLeft: this.timeLeft, phase: this.state.phase });
 
       if (this.timeLeft <= 0) {
         clearInterval(this.timer);

@@ -8,13 +8,13 @@
   --accent-red: #ff2a5f;
   --accent-purple: #b24bf3;
   --accent-blue: #3b82f6;
-  --accent-glow: 0 0 30px rgba(255, 42, 95, 0.5);
+  --accent-glow: 0 0 15px rgba(255, 42, 95, 0.4);
 
-  /* Glassmorphism Surface */
+  /* Glassmorphism Surface (Optimized for Mobile) */
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 15px 35px 0 rgba(0, 0, 0, 0.6);
-  --glass-blur: blur(25px);
+  --glass-shadow: 0 10px 25px 0 rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(10px);
 
   --radius-lg: 32px;
   --radius-md: 20px;

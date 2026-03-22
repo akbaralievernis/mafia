@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Moon, Sun, Tv } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
 
 export default function SpectatorScreen({ gameState }) {
+  const { socket } = useSocket();
+  const [timeLeft, setTimeLeft] = useState(null);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('timer_update', (data) => {
+      setTimeLeft(data.timeLeft);
+    });
+
+    return () => {
+      socket.off('timer_update');
+    };
+  }, [socket]);
+
   const phase = gameState?.phase || 'day';
   const round = gameState?.round || 1;
   const alivePlayers = gameState?.alivePlayers || [];
@@ -26,6 +41,11 @@ export default function SpectatorScreen({ gameState }) {
             </h2>
           </div>
           <p className="text-secondary" style={{ marginTop: '0.5rem', fontSize: '1rem' }}>Раунд {round}</p>
+          {timeLeft !== null && (
+            <p style={{ marginTop: '0.3rem', fontSize: '1.2rem', fontWeight: 'bold', color: timeLeft <= 10 ? 'var(--accent-red)' : 'var(--accent-blue)' }}>
+              ⏳ Осталось: {timeLeft} сек
+            </p>
+          )}
         </div>
 
         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
@@ -68,7 +88,6 @@ export default function SpectatorScreen({ gameState }) {
             return (
               <motion.div
                 key={p.id}
-                layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: isDead ? 0.4 : 1, scale: 1 }}
                 style={{
