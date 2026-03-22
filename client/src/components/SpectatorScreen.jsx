@@ -22,8 +22,32 @@ export default function SpectatorScreen({ gameState }) {
 
   const phase = gameState?.phase || 'day';
   const round = gameState?.round || 1;
-  const alivePlayers = gameState?.alivePlayers || [];
-  const players = gameState?.players || [];
+  const alivePlayers = gameState.alivePlayers || [];
+  const players = gameState.players || [];
+  const amIAlive = alivePlayers.includes(myId);
+
+  if (phase === 'end') {
+    const isMafiaWin = gameState.gameOverData?.winners === 'mafia';
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring' }}>
+          <h1 style={{ fontSize: '3rem', color: isMafiaWin ? 'var(--accent-red)' : 'var(--accent-blue)', marginBottom: '1rem', textTransform: 'uppercase' }}>
+            {t('game_over')}
+          </h1>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>
+            {isMafiaWin ? t('winners_mafia') : t('winners_citizens')}
+          </h2>
+          <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '3rem', padding: '0 2rem' }}>
+            {gameState.gameOverData?.message}
+          </p>
+          <button className="btn-primary" onClick={() => window.location.href = '/'} style={{ padding: '1rem 3rem', borderRadius: '30px' }}>
+            {t('return_to_lobby')}
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   const isNight = phase === 'night';
 
   return (

@@ -65,6 +65,12 @@ const translations = {
     spectator_detective_chooses: '— 🔍 Комиссар ищет мафию',
     spectator_discussion: 'Идет обсуждение. Выслушайте каждого!',
 
+    // Game Over
+    game_over: 'ИГРА ОКОНЧЕНА',
+    winners_mafia: 'Победила Мафия 🩸',
+    winners_citizens: 'Мирные жители спасли город 🛡️',
+    return_to_lobby: 'Вернуться на главную',
+
     // TTS Fallbacks
     tts_night_starts: 'Наступает ночь. Город засыпает.',
     tts_mafia_wakes: 'Просыпается мафия.',
@@ -137,6 +143,12 @@ const translations = {
     spectator_doctor_chooses: '— 🛡️ Arzt eilt zur Hilfe',
     spectator_detective_chooses: '— 🔍 Kommissar sucht die Mafia',
     spectator_discussion: 'Die Diskussion läuft. Hör jedem zu!',
+
+    // Game Over
+    game_over: 'SPIEL BEENDET',
+    winners_mafia: 'Die Mafia gewinnt 🩸',
+    winners_citizens: 'Die Bürger haben die Stadt gerettet 🛡️',
+    return_to_lobby: 'Zurück zum Hauptmenü',
 
     // TTS Fallbacks
     tts_night_starts: 'Die Nacht beginnt. Die Stadt schläft ein.',

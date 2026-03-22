@@ -43,6 +43,11 @@ export const SocketProvider = ({ children }) => {
       setRoomData(prev => prev ? { ...prev, ...data } : data);
     });
 
+    newSocket.on('game_over', (data) => {
+      VoiceTTS.speak(data.message);
+      setRoomData(prev => ({ ...prev, phase: 'end', gameOverData: data }));
+    });
+
     // Обработка игровых событий и тостов
     const handleGameEvent = (data) => {
       setGameEvent(data);
