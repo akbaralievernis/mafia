@@ -3,7 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Moon, Sun, Tv } from 'lucide-react';
 
 export default function SpectatorScreen({ gameState }) {
-  const { phase, round, alivePlayers, players } = gameState;
+  const phase = gameState?.phase || 'day';
+  const round = gameState?.round || 1;
+  const alivePlayers = gameState?.alivePlayers || [];
+  const players = gameState?.players || [];
   const isNight = phase === 'night';
 
   return (

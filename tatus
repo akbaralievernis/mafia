@@ -1,0 +1,17 @@
+[33mcommit 26afa5c12ad09707d68c5ca54c7b091210c3a703[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: akbaralievernis <167276307+akbaralievernis@users.noreply.github.com>
+Date:   Sun Mar 22 20:48:45 2026 +0600
+
+    Add new game features, avatars, TTS and fix night phase
+
+[33mcommit 274d848d8c58cd31311a83ef28ea332ef4036aa5[m
+Author: akbaralievernis <167276307+akbaralievernis@users.noreply.github.com>
+Date:   Sat Mar 21 19:21:16 2026 +0600
+
+    Enable Game Master TV Spectator mode
+
+[33mcommit 23f2a65c6638408242f377409f55ed5672957dc5[m
+Author: akbaralievernis <167276307+akbaralievernis@users.noreply.github.com>
+Date:   Fri Mar 20 21:42:03 2026 +0600
+
+    Fix SocketContext ignoring phase changes

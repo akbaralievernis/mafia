@@ -53,7 +53,9 @@ export default function Game({ gameState, myId, onAction, isHost }) {
     );
   }
 
-  const { phase, round, alivePlayers, players, roles } = gameState;
+  const { phase, round, roles } = gameState;
+  const alivePlayers = gameState.alivePlayers || [];
+  const players = gameState.players || [];
   const myRole = roles[myId] || 'Скрыто';
   const amIAlive = alivePlayers.includes(myId);
 
