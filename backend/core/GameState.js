@@ -178,6 +178,7 @@ class GameState {
       players: this.players.map(p => ({
         id: p.id,
         name: p.name,
+        avatar: p.avatar,
         isAlive: this.alivePlayers.includes(p.id)
       }))
     };

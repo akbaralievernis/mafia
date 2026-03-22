@@ -53,7 +53,7 @@ io.on('connection', (socket) => {
   console.log('Новое подключение:', socket.id);
 
   // 1. Создание комнаты
-  socket.on('create_room', ({ playerName, maxPlayers = 10 }, callback) => {
+  socket.on('create_room', ({ playerName, avatar, maxPlayers = 10 }, callback) => {
     let roomCode = generateRoomCode();
     // Убедимся, что код уникален
     while (rooms.has(roomCode)) {
@@ -63,6 +63,7 @@ io.on('connection', (socket) => {
     const player = {
       id: socket.id,
       name: playerName,
+      avatar: avatar,
       isHost: true
     };
 
@@ -83,7 +84,7 @@ io.on('connection', (socket) => {
   });
 
   // 2. Подключение к комнате
-  socket.on('join_room', ({ roomCode, playerName }, callback) => {
+  socket.on('join_room', ({ roomCode, playerName, avatar }, callback) => {
     roomCode = roomCode.toUpperCase();
     const room = rooms.get(roomCode);
 
@@ -106,6 +107,7 @@ io.on('connection', (socket) => {
     const player = {
       id: socket.id,
       name: playerName,
+      avatar: avatar,
       isHost: false
     };
 
