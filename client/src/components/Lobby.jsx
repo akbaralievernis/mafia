@@ -41,7 +41,15 @@ export default function Lobby({ roomData, onStart, isHost }) {
               justifyContent: 'space-between',
               marginBottom: '1rem'
             }}>
-              <span style={{ fontWeight: 600 }}>{hostPlayer.name}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ 
+                  width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)',
+                  overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center'
+                }}>
+                  {hostPlayer.avatar ? <img src={hostPlayer.avatar} alt="avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : '👤'}
+                </div>
+                <span style={{ fontWeight: 600 }}>{hostPlayer.name}</span>
+              </div>
               <span style={{ fontSize: '0.8rem', color: 'var(--accent-purple)', fontWeight: 'bold' }}>ГЛАВНЫЙ ЭКРАН (ВЕДУЩИЙ)</span>
             </div>
           )}
@@ -65,7 +73,15 @@ export default function Lobby({ roomData, onStart, isHost }) {
                   alignItems: 'center'
                 }}
               >
-                <span style={{ fontWeight: 600 }}>{p.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ 
+                    width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)',
+                    overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center'
+                  }}>
+                    {p.avatar ? <img src={p.avatar} alt="avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : '👤'}
+                  </div>
+                  <span style={{ fontWeight: 600 }}>{p.name}</span>
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>

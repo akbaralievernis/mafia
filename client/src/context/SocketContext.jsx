@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { VoiceTTS } from '../utils/VoiceTTS';
 
 const SocketContext = createContext();
 
@@ -44,13 +45,23 @@ export const SocketProvider = ({ children }) => {
     // Обработка игровых событий и тостов
     const handleGameEvent = (data) => {
       setGameEvent(data);
+      if (data.message) {
+        VoiceTTS.speak(data.message);
+      }
       setTimeout(() => setGameEvent(null), 5000);
     };
 
     newSocket.on('day_started', handleGameEvent);
     newSocket.on('voting_started', handleGameEvent);
     newSocket.on('voting_result', handleGameEvent);
-    newSocket.on('phase_started', handleGameEvent);
+    newSocket.on('revote_started', handleGameEvent);
+
+    newSocket.on('phase_started', (data) => {
+      if (data.phase === 'night') {
+        VoiceTTS.speak("Наступила ночь. Город засыпает. Просыпается мафия.");
+      }
+      handleGameEvent(data);
+    });
 
     newSocket.on('timer', (time) => {
       setTimer(time);

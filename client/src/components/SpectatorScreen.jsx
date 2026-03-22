@@ -35,7 +35,20 @@ export default function SpectatorScreen({ gameState }) {
       {isNight ? (
         <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-md)' }}>
           <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-purple)' }}>Активные роли делают свой выбор...</h3>
-          <p className="text-secondary" style={{ marginTop: '0.5rem' }}>Роли скрыты, чтобы не портить интригу.</p>
+          <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+              style={{ color: 'var(--text-secondary)' }}
+            >— 🗡️ Мафия выбирает жертву</motion.p>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}
+              style={{ color: 'var(--text-secondary)' }}
+            >— 🛡️ Доктор спешит на помощь</motion.p>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.5 }}
+              style={{ color: 'var(--text-secondary)' }}
+            >— 🔍 Комиссар ищет мафию</motion.p>
+          </div>
         </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)' }}>
@@ -71,9 +84,15 @@ export default function SpectatorScreen({ gameState }) {
                   borderRadius: '50%', 
                   background: isDead ? '#222' : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.3))',
                   margin: '0 auto 1rem auto',
-                  display: 'flex', justifyContent: 'center', alignItems: 'center'
+                  display: 'flex', justifyContent: 'center', alignItems: 'center',
+                  overflow: 'hidden',
+                  border: isDead ? '2px solid var(--accent-red)' : '2px solid transparent'
                 }}>
-                  {isDead && <span style={{ fontSize: '1.5rem' }}>💀</span>}
+                  {isDead ? (
+                    <span style={{ fontSize: '1.5rem' }}>💀</span>
+                  ) : p.avatar ? (
+                    <img src={p.avatar} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : null}
                 </div>
                 
                 <h4 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.name}</h4>

@@ -9,9 +9,10 @@ class RoleDistributor {
    * @returns {Object} Словарь ролей { [playerId]: 'role_name' }
    */
   static assignRoles(players) {
-    // Отделяем хоста (Ведущего) от обычных игроков
-    const hostPlayer = players.find(p => p.isHost);
-    const activePlayers = players.filter(p => !p.isHost);
+    // Отделяем хоста (Ведущего) от обычных игроков и фильтруем пустые значения
+    const validPlayers = players.filter(p => p !== null && p !== undefined);
+    const hostPlayer = validPlayers.find(p => p.isHost);
+    const activePlayers = validPlayers.filter(p => !p.isHost);
     
     const count = activePlayers.length;
     

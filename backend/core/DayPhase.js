@@ -29,12 +29,17 @@ class DayPhase {
     
     console.log(`[Комната ${this.state.id}] Наступил День. Раунд ${this.state.round}. Обсуждение.`);
 
+    let killedPlayerName = null;
+    if (nightResults.killedPlayerId) {
+       killedPlayerName = this.state.players.find(p => p.id === nightResults.killedPlayerId)?.name || "Неизвестный";
+    }
+
     // 1. Показать результат ночи всем игрокам
     this.io.to(this.state.id).emit('day_started', {
       killedPlayerId: nightResults.killedPlayerId,
-      message: nightResults.killedPlayerId 
-        ? "Мафия сделала свой выбор. В городе жертва." 
-        : "Жители проснулись в целости и сохранности. Доктор кого-то спас, либо мафия промахнулась!"
+      message: killedPlayerName 
+        ? `Наступил день. Мафия сделала свой выбор. Убит игрок ${killedPlayerName}.` 
+        : "Наступил день. Жители проснулись в целости и сохранности. Доктор кого-то спас, либо мафия промахнулась!"
     });
 
     // Излучаем обновление состояния (убитый игрок станет { isAlive: false })
@@ -106,15 +111,13 @@ class DayPhase {
     return { success: true };
   }
 
-  /**
-   * Обработчик входящего голоса от игрока.
-   * Защита от двойного голосования уже реализована внутри this.state.registerVote,
-   * так как там используется словарь this.votes[voterId] = suspectId.
-   * При повторном голосовании старый голос затирается новым (игрок может "передумать").
-   */
   handleVote(voterId, suspectId) {
-    if (this.subPhase !== 'voting') {
+    if (this.subPhase !== 'voting' && this.subPhase !== 'revoting') {
       return { error: "Голосование еще не началось" };
+    }
+
+    if (this.subPhase === 'revoting' && this.tiedCandidates && !this.tiedCandidates.includes(suspectId)) {
+      return { error: "Можно голосовать только за кандидатов с ничьей!" };
     }
     
     const success = this.state.registerVote(voterId, suspectId);
@@ -126,7 +129,11 @@ class DayPhase {
       // Проверка досрочного завершения: все живые проголосовали?
       if (Object.keys(this.state.votes).length === this.state.alivePlayers.length) {
         console.log(`[Комната ${this.state.id}] Все проголосовали. Подсчет.`);
-        this.endDay();
+        if (this.subPhase === 'revoting') {
+          this.endRevote();
+        } else {
+          this.endDay();
+        }
       }
       return { success: true };
     }
@@ -146,43 +153,97 @@ class DayPhase {
       voteCounts[suspectId] = (voteCounts[suspectId] || 0) + 1;
     });
 
-    let exiledPlayerId = null;
     let maxVotes = 0;
-    let isTie = false; // Проверка на "ничью"
+    let isTie = false;
+    this.tiedCandidates = [];
 
     Object.entries(voteCounts).forEach(([suspectId, count]) => {
       if (count > maxVotes) {
         maxVotes = count;
-        exiledPlayerId = suspectId;
         isTie = false;
+        this.tiedCandidates = [suspectId];
       } else if (count === maxVotes) {
-        isTie = true; // Два человека набрали равное количество голосов
+        isTie = true;
+        this.tiedCandidates.push(suspectId);
       }
     });
 
-    // Решаем судьбу (если ничья — никто не уходит, иначе - убиваем)
-    if (exiledPlayerId && !isTie) {
-      this.state.killPlayer(exiledPlayerId);
-      console.log(`[Комната ${this.state.id}] По итогам голосования уходит ${exiledPlayerId}`);
+    if (maxVotes === 0) {
+      this._finishVotingWithNoOneExiled("Голоса разделились или никто не проголосовал. Город засыпает в страхе.");
+    } else if (isTie) {
+      // НАЧИНАЕМ ПЕРЕГОЛОСОВАНИЕ
+      console.log(`[Комната ${this.state.id}] Ничья. Запуск переголосования между: ${this.tiedCandidates.join(', ')}`);
+      this.subPhase = 'revoting';
+      this.state.votes = {}; // Сбрасываем голоса
+      this.state.isProcessingPhase = false;
       
-      this.io.to(this.state.id).emit('voting_result', {
-        exiledPlayerId: exiledPlayerId,
-        message: "Город сделал выбор. Игрок изгнан."
+      this.io.to(this.state.id).emit('revote_started', {
+        candidates: this.tiedCandidates,
+        message: "Ничья! У вас есть 20 секунд, чтобы переголосовать среди кандидатов."
+      });
+      // Очищаем локальные голоса на клиенте тоже
+      this.io.to(this.state.id).emit('votes_updated', {});
+
+      this._startTimer(20, () => {
+        this.endRevote();
       });
     } else {
-      console.log(`[Комната ${this.state.id}] Ничья/тишина. Никто не изгнан.`);
-      this.io.to(this.state.id).emit('voting_result', {
-        exiledPlayerId: null,
-        message: "Голоса разделились или никто не проголосовал. Город засыпает в страхе."
-      });
+      this._finishVotingExile(this.tiedCandidates[0]);
     }
+  }
 
+  endRevote() {
+    clearInterval(this.timer);
+    this.state.isProcessingPhase = true;
+
+    const voteCounts = {};
+    Object.values(this.state.votes).forEach(suspectId => {
+      voteCounts[suspectId] = (voteCounts[suspectId] || 0) + 1;
+    });
+
+    let maxVotes = 0;
+    let isTie = false;
+    let winnerId = null;
+
+    Object.entries(voteCounts).forEach(([suspectId, count]) => {
+      if (count > maxVotes) {
+        maxVotes = count;
+        winnerId = suspectId;
+        isTie = false;
+      } else if (count === maxVotes) {
+        isTie = true;
+      }
+    });
+
+    if (maxVotes === 0 || isTie) {
+      this._finishVotingWithNoOneExiled("Даже переголосование не выявило виновного. Никто не изгнан.");
+    } else {
+      this._finishVotingExile(winnerId);
+    }
+  }
+
+  _finishVotingExile(exiledPlayerId) {
+    this.state.killPlayer(exiledPlayerId);
+    console.log(`[Комната ${this.state.id}] По итогам голосования уходит ${exiledPlayerId}`);
+    
+    const exiledName = this.state.players.find(p => p.id === exiledPlayerId)?.name || 'Неизвестный';
+
+    this.io.to(this.state.id).emit('voting_result', {
+      exiledPlayerId: exiledPlayerId,
+      message: `Город сделал свой суровый выбор. Игрок ${exiledName} изгнан.`
+    });
     this.state.isProcessingPhase = false;
+    if (this.onDayEnd) this.onDayEnd({ exiledPlayerId });
+  }
 
-    // Передаем управление обратно GameEngine для старта новой ночи
-    if (this.onDayEnd) {
-      this.onDayEnd({ exiledPlayerId });
-    }
+  _finishVotingWithNoOneExiled(msg) {
+    console.log(`[Комната ${this.state.id}] Ничья/тишина. Никто не изгнан.`);
+    this.io.to(this.state.id).emit('voting_result', {
+      exiledPlayerId: null,
+      message: msg
+    });
+    this.state.isProcessingPhase = false;
+    if (this.onDayEnd) this.onDayEnd({ exiledPlayerId: null });
   }
 
   // --- Внутренние утилиты ---
