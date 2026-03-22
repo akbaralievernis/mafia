@@ -18,8 +18,11 @@ const RoomRouter = () => {
 
   if (!roomData || !socket) return null;
 
-  const myId = socket.id;
-  const isHost = roomData.players?.find(p => p.id === myId)?.isHost;
+  // Ищем реальный ID игрока (он мог измениться при реконнекте socket.id, поэтому ищем по имени)
+  const playerName = localStorage.getItem('playerName');
+  const myPlayer = roomData.players?.find(p => p.name === playerName);
+  const myId = myPlayer ? myPlayer.id : socket.id;
+  const isHost = myPlayer ? myPlayer.isHost : false;
 
   const handleStart = () => {
     socket.emit('start_game', { roomCode: roomData.id });

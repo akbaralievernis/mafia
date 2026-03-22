@@ -22,6 +22,19 @@ export const SocketProvider = ({ children }) => {
     });
     setSocket(newSocket);
 
+    newSocket.on('connect', () => {
+      // Пытаемся восстановить сессию, если произошел обрыв связи (например, свернули браузер на телефоне)
+      setRoomData(currentRoom => {
+        if (currentRoom && currentRoom.id) {
+          const playerName = localStorage.getItem('playerName');
+          if (playerName) {
+            newSocket.emit('reconnect_room', { roomCode: currentRoom.id, playerName });
+          }
+        }
+        return currentRoom;
+      });
+    });
+
     newSocket.on('game_started', (data) => {
       setRoomData(prev => ({ ...prev, ...data }));
       if (data.event) {

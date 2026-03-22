@@ -62,6 +62,7 @@ io.on('connection', (socket) => {
 
     const player = {
       id: socket.id,
+      socketId: socket.id,
       name: playerName,
       avatar: avatar,
       isHost: true
@@ -106,6 +107,7 @@ io.on('connection', (socket) => {
 
     const player = {
       id: socket.id,
+      socketId: socket.id,
       name: playerName,
       avatar: avatar,
       isHost: false
@@ -158,11 +160,18 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Helper to find logic ID by socket ID
+  const getPlayerId = (room, socketId) => {
+    const p = room.players.find(p => p.socketId === socketId);
+    return p ? p.id : socketId;
+  };
+
   // 5. Игровые действия (Ночь)
   socket.on('night_action', ({ roomCode, targetId }, callback) => {
     const room = rooms.get(roomCode);
     if (room && room.engine) {
-      const result = room.engine.handleNightAction(socket.id, targetId);
+      const pid = getPlayerId(room, socket.id);
+      const result = room.engine.handleNightAction(pid, targetId);
       if (callback) callback(result);
     } else if (callback) {
       callback({ error: 'Игра не найдена' });
@@ -173,7 +182,8 @@ io.on('connection', (socket) => {
   socket.on('day_vote', ({ roomCode, targetId }, callback) => {
     const room = rooms.get(roomCode);
     if (room && room.engine) {
-      const result = room.engine.handleDayVote(socket.id, targetId);
+      const pid = getPlayerId(room, socket.id);
+      const result = room.engine.handleDayVote(pid, targetId);
       if (callback) callback(result);
     } else if (callback) {
       callback({ error: 'Игра не найдена' });
@@ -184,11 +194,36 @@ io.on('connection', (socket) => {
   socket.on('send_chat_message', ({ roomCode, message }, callback) => {
     const room = rooms.get(roomCode);
     if (room && room.engine) {
-      const result = room.engine.handleChatMessage(socket.id, message);
+      const pid = getPlayerId(room, socket.id);
+      const result = room.engine.handleChatMessage(pid, message);
       if (callback) callback(result);
     } else if (callback) {
       callback({ error: 'Игра не найдена' });
     }
+  });
+
+  // 8. Восстановление сессии (Reconnect)
+  socket.on('reconnect_room', ({ roomCode, playerName }, callback) => {
+    roomCode = roomCode?.toUpperCase();
+    const room = rooms.get(roomCode);
+    if (!room) return callback && callback({ success: false });
+
+    const player = room.players.find(p => p.name === playerName);
+    if (!player) return callback && callback({ success: false });
+
+    // Привязываем новый сокет к тому же игроку
+    player.socketId = socket.id;
+    socket.join(roomCode);
+    socket.join(player.id); // Чтобы io.to(player.id) находил этот новый сокет!
+
+    console.log(`Игрок ${playerName} ВОССТАНОВИЛ подключение к ${roomCode}`);
+
+    if (room.engine) {
+      socket.emit('game_started', room.engine.state.getSanitizedState(player.id));
+    } else {
+      socket.emit('room_updated', room);
+    }
+    if (callback) callback({ success: true, room });
   });
 
   // 4. Отключение игрока
@@ -199,13 +234,18 @@ io.on('connection', (socket) => {
       const playerIndex = room.players.findIndex(p => p.id === socket.id);
       
       if (playerIndex !== -1) {
-        const disconnectedPlayer = room.players[playerIndex];
-        room.players.splice(playerIndex, 1);
-        
-        console.log(`Игрок ${disconnectedPlayer.name} покинул комнату ${roomCode}`);
+        // Удаляем из комнаты ТОЛЬКО ЕСЛИ игра еще не началась!
+        // Иначе игрок должен оставаться в истории, чтобы иметь возможность переподключиться.
+        if (room.status === 'lobby') {
+          room.players.splice(playerIndex, 1);
+          console.log(`Игрок ${disconnectedPlayer.name} покинул лобби ${roomCode}`);
+        } else {
+          console.log(`Игрок ${disconnectedPlayer.name} отключился от запущенной игры ${roomCode}`);
+        }
 
         // Если комната пуста — даем 10 минут на переподключение перед полным удалением
-        if (room.players.length === 0) {
+        const activePlayersCount = room.players.filter(p => io.sockets.adapter.rooms.has(p.id) || p.socketId === p.id).length;
+        if (activePlayersCount === 0 || room.players.length === 0) {
           console.log(`Комната ${roomCode} опустела. Ожидание 10 минут перед удалением...`);
           room.destroyTimer = setTimeout(() => {
             if (rooms.has(roomCode) && rooms.get(roomCode).players.length === 0) {
