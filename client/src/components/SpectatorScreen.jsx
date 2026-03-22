@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Moon, Sun, Tv } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
+import { useTranslation } from '../utils/i18n';
 
 export default function SpectatorScreen({ gameState }) {
+  const { t } = useTranslation();
   const { socket } = useSocket();
   const [timeLeft, setTimeLeft] = useState(null);
 
@@ -37,45 +39,45 @@ export default function SpectatorScreen({ gameState }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             {isNight ? <Moon size={32} color="var(--accent-purple)" /> : <Sun size={32} color="#FFD700" />}
             <h2 style={{ fontSize: '2rem', fontWeight: 800 }}>
-              {isNight ? 'Ночь: Город засыпает' : phase === 'vote' ? 'Дневное голосование' : 'День: Обсуждение'}
+              {isNight ? t('spectator_title_night') : phase === 'vote' ? t('spectator_title_vote') : t('spectator_title_day')}
             </h2>
           </div>
-          <p className="text-secondary" style={{ marginTop: '0.5rem', fontSize: '1rem' }}>Раунд {round}</p>
+          <p className="text-secondary" style={{ marginTop: '0.5rem', fontSize: '1rem' }}>{t('round')} {round}</p>
           {timeLeft !== null && (
             <p style={{ marginTop: '0.3rem', fontSize: '1.2rem', fontWeight: 'bold', color: timeLeft <= 10 ? 'var(--accent-red)' : 'var(--accent-blue)' }}>
-              ⏳ Осталось: {timeLeft} сек
+              {t('time_left')} {timeLeft} {t('sec')}
             </p>
           )}
         </div>
 
         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
           <Tv size={30} color="var(--text-secondary)" opacity={0.5} />
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-purple)', textTransform: 'uppercase', letterSpacing: '2px' }}>Главный Экран</h3>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-purple)', textTransform: 'uppercase', letterSpacing: '2px' }}>{t('spectator_main_screen')}</h3>
         </div>
       </motion.div>
 
       {/* Описание для зрителей */}
       {isNight ? (
         <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(0,0,0,0.3)', borderRadius: 'var(--radius-md)' }}>
-          <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-purple)' }}>Активные роли делают свой выбор...</h3>
+          <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-purple)' }}>{t('spectator_active_roles')}</h3>
           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <motion.p 
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
               style={{ color: 'var(--text-secondary)' }}
-            >— 🗡️ Мафия выбирает жертву</motion.p>
+            >{t('spectator_mafia_chooses')}</motion.p>
             <motion.p 
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}
               style={{ color: 'var(--text-secondary)' }}
-            >— 🛡️ Доктор спешит на помощь</motion.p>
+            >{t('spectator_doctor_chooses')}</motion.p>
             <motion.p 
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.5 }}
               style={{ color: 'var(--text-secondary)' }}
-            >— 🔍 Комиссар ищет мафию</motion.p>
+            >{t('spectator_detective_chooses')}</motion.p>
           </div>
         </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '2rem', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)' }}>
-          <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-blue)' }}>Идет обсуждение. Выслушайте каждого!</h3>
+          <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-blue)' }}>{t('spectator_discussion')}</h3>
         </div>
       )}
 
@@ -118,8 +120,8 @@ export default function SpectatorScreen({ gameState }) {
                 </div>
                 
                 <h4 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.name}</h4>
-                {isDead && <p style={{ fontSize: '0.85rem', color: 'var(--accent-red)', fontWeight: 'bold' }}>Исключен</p>}
-                {!isDead && <p style={{ fontSize: '0.85rem', color: 'var(--accent-blue)' }}>В игре</p>}
+                {isDead && <p style={{ fontSize: '0.85rem', color: 'var(--accent-red)', fontWeight: 'bold' }}>{t('exiled')}</p>}
+                {!isDead && <p style={{ fontSize: '0.85rem', color: 'var(--accent-blue)' }}>{t('in_game')}</p>}
               </motion.div>
             );
           })}

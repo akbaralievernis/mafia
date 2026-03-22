@@ -1,7 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from '../utils/i18n';
 
 export default function Lobby({ roomData, onStart, isHost }) {
+  const { t } = useTranslation();
   if (!roomData) return null;
 
   const hostPlayer = roomData.players.find(p => p.isHost);
@@ -16,7 +18,7 @@ export default function Lobby({ roomData, onStart, isHost }) {
         style={{ width: '100%', maxWidth: '500px' }}
       >
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Комната: <span style={{ color: 'var(--accent-red)' }}>{roomData.id}</span></h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{t('lobby_title')} <span style={{ color: 'var(--accent-red)' }}>{roomData.id}</span></h2>
           <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
              <div style={{ background: '#fff', padding: '10px', borderRadius: '8px' }}>
                <img 
@@ -27,7 +29,7 @@ export default function Lobby({ roomData, onStart, isHost }) {
                />
              </div>
           </div>
-          <p className="text-secondary" style={{ marginTop: '0.5rem' }}>Ожидание игроков...</p>
+          <p className="text-secondary" style={{ marginTop: '0.5rem' }}>{t('invite_friends')}</p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '2rem' }}>
@@ -50,11 +52,11 @@ export default function Lobby({ roomData, onStart, isHost }) {
                 </div>
                 <span style={{ fontWeight: 600 }}>{hostPlayer.name}</span>
               </div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--accent-purple)', fontWeight: 'bold' }}>ГЛАВНЫЙ ЭКРАН (ВЕДУЩИЙ)</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--accent-purple)', fontWeight: 'bold' }}>{t('host_badge')}</span>
             </div>
           )}
         
-          <h3 style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Игроки ({normalPlayers.length}):</h3>
+          <h3 style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>{t('players')} ({normalPlayers.length}):</h3>
           <AnimatePresence>
             {normalPlayers.map((p, i) => (
               <motion.div 
@@ -93,11 +95,11 @@ export default function Lobby({ roomData, onStart, isHost }) {
             style={{ width: '100%' }}
             onClick={onStart}
           >
-            {normalPlayers.length < 4 ? `Начать (добавится ${4 - normalPlayers.length} бота)` : 'Начать игру'}
+            {normalPlayers.length < 4 ? `(Bots: ${4 - normalPlayers.length}) ${t('start_game')}` : t('start_game')}
           </button>
         ) : (
           <p className="text-secondary" style={{ textAlign: 'center', fontSize: '0.9rem' }}>
-            Ожидаем, пока создатель запустит игру...
+            {t('waiting_host')}
           </p>
         )}
       </motion.div>

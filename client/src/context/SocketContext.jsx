@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { VoiceTTS } from '../utils/VoiceTTS';
+import { t } from '../utils/i18n';
 
 const SocketContext = createContext();
 
@@ -45,20 +46,32 @@ export const SocketProvider = ({ children }) => {
     // Обработка игровых событий и тостов
     const handleGameEvent = (data) => {
       setGameEvent(data);
-      if (data.message) {
-        VoiceTTS.speak(data.message);
-      }
       setTimeout(() => setGameEvent(null), 5000);
     };
 
-    newSocket.on('day_started', handleGameEvent);
-    newSocket.on('voting_started', handleGameEvent);
-    newSocket.on('voting_result', handleGameEvent);
-    newSocket.on('revote_started', handleGameEvent);
+    newSocket.on('day_started', (data) => {
+      VoiceTTS.speak(t('tts_day_starts'));
+      handleGameEvent(data);
+    });
+
+    newSocket.on('voting_started', (data) => {
+      VoiceTTS.speak(t('tts_voting_time'));
+      handleGameEvent(data);
+    });
+
+    newSocket.on('voting_result', (data) => {
+      VoiceTTS.speak(data.message); // Сервер присылает имя убитого, лучше озвучить как есть (имя) или добавить ключ в будущем
+      handleGameEvent(data);
+    });
+
+    newSocket.on('revote_started', (data) => {
+      VoiceTTS.speak(t('revote'));
+      handleGameEvent(data);
+    });
 
     newSocket.on('phase_started', (data) => {
       if (data.phase === 'night') {
-        VoiceTTS.speak("Наступила ночь. Город засыпает. Просыпается мафия.");
+        VoiceTTS.speak(t('tts_night_starts') + " " + t('tts_mafia_attacks'));
       }
       handleGameEvent(data);
     });

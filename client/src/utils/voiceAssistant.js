@@ -23,16 +23,25 @@ class VoiceAssistant {
    */
   loadVoices() {
     const voices = this.synth.getVoices();
-    // Ищем Yandex, Google или любой доступный русский голос (ru-RU)
-    const ruVoices = voices.filter(v => v.lang.includes('ru'));
-    
-    // Предпочтение отдаем мужским дикторским голосам
-    this.voice = ruVoices.find(v => {
-      const name = v.name.toLowerCase();
-      return name.includes('yuri') || name.includes('pavel') || name.includes('dmitry') || name.includes('male') || name.includes('мужской');
-    }) || ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) 
-       || ruVoices[0] 
-       || voices[0];
+    const lang = localStorage.getItem('mafia_lang') || 'ru';
+
+    if (lang === 'de') {
+      const deVoices = voices.filter(v => v.lang.includes('de'));
+      this.voice = deVoices.find(v => v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Male')) 
+                   || deVoices[0] 
+                   || voices[0];
+    } else {
+      // Ищем Yandex, Google или любой доступный русский голос (ru-RU)
+      const ruVoices = voices.filter(v => v.lang.includes('ru'));
+      
+      // Предпочтение отдаем мужским дикторским голосам
+      this.voice = ruVoices.find(v => {
+        const name = v.name.toLowerCase();
+        return name.includes('yuri') || name.includes('pavel') || name.includes('dmitry') || name.includes('male') || name.includes('мужской');
+      }) || ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) 
+         || ruVoices[0] 
+         || voices[0];
+    }
   }
 
   toggleMute() {

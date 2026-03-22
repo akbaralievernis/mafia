@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
+import { useTranslation } from '../utils/i18n';
 
 export default function Home() {
   const [name, setName] = useState(localStorage.getItem('playerName') || '');
@@ -10,6 +11,7 @@ export default function Home() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const fileInputRef = useRef(null);
   
+  const { t, lang, setLanguage } = useTranslation();
   const { socket, roomData, setRoomData } = useSocket();
   const navigate = useNavigate();
 
@@ -73,11 +75,17 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="glass-panel" 
-        style={{ width: '100%', maxWidth: '400px' }}
+        style={{ width: '100%', maxWidth: '400px', position: 'relative' }}
       >
+        {/* Language Selector */}
+        <div style={{ position: 'absolute', top: 15, right: 15, display: 'flex', gap: '8px' }}>
+          <button onClick={() => setLanguage('ru')} style={{ opacity: lang === 'ru' ? 1 : 0.4, border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>🇷🇺</button>
+          <button onClick={() => setLanguage('de')} style={{ opacity: lang === 'de' ? 1 : 0.4, border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>🇩🇪</button>
+        </div>
+
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>МАФИЯ</h1>
-          <p className="text-secondary">Премиум издание без ведущего</p>
+          <p className="text-secondary">{t('home_subtitle')}</p>
         </div>
 
         {/* Profile Avatar Selection */}
@@ -101,20 +109,20 @@ export default function Home() {
             onChange={handleImageUpload} 
           />
           <span style={{ fontSize: '0.8rem', color: 'var(--accent-purple)', marginTop: '0.5rem', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
-            Загрузить Аватар
+            {t('avatar_upload')}
           </span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <input 
             className="input-glass" 
-            placeholder="Ваше имя" 
+            placeholder={t('enter_name')} 
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input 
             className="input-glass" 
-            placeholder="Код комнаты (оставьте пустым для новой)" 
+            placeholder={t('enter_code')} 
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             maxLength={6}
@@ -124,7 +132,7 @@ export default function Home() {
             style={{ marginTop: '1rem' }}
             onClick={handleJoin}
           >
-            {code ? 'Войти в игру' : 'Создать комнату'}
+            {code ? t('join_game') : t('create_room_btn')}
           </button>
         </div>
       </motion.div>

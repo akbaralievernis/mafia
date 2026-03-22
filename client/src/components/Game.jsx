@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Moon, Sun, ShieldAlert, Check, AlertTriangle } from 'lucide-react';
 import SpectatorScreen from './SpectatorScreen';
 import { useSocket } from '../context/SocketContext';
+import { useTranslation } from '../utils/i18n';
 
 export default function Game({ gameState, myId, onAction, isHost }) {
+  const { t } = useTranslation();
   const { socket } = useSocket();
   const [selectedId, setSelectedId] = useState(null);
   const [hasActed, setHasActed] = useState(false);
@@ -62,7 +64,7 @@ export default function Game({ gameState, myId, onAction, isHost }) {
   const { phase, round, roles } = gameState;
   const alivePlayers = gameState.alivePlayers || [];
   const players = gameState.players || [];
-  const myRole = roles[myId] || 'Скрыто';
+  const myRole = roles[myId] || t('hidden');
   const amIAlive = alivePlayers.includes(myId);
 
   const isNight = phase === 'night';
@@ -94,10 +96,10 @@ export default function Game({ gameState, myId, onAction, isHost }) {
   };
 
   const roleNames = {
-    mafia: 'Мафия',
-    doctor: 'Доктор',
-    detective: 'Комиссар',
-    citizen: 'Мирный '
+    mafia: t('role_mafia'),
+    doctor: t('role_doctor'),
+    detective: t('role_detective'),
+    citizen: t('role_citizen')
   };
 
   return (
@@ -113,21 +115,21 @@ export default function Game({ gameState, myId, onAction, isHost }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             {isNight ? <Moon size={28} color="var(--accent-purple)" /> : <Sun size={28} color="#FFD700" />}
             <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>
-              {isNight ? 'Ночь' : phase === 'vote' ? 'Голосование' : 'День'}
+              {isNight ? t('phase_night') : phase === 'vote' ? t('phase_vote') : t('phase_day')}
             </h2>
           </div>
-          <p className="text-secondary" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}>Раунд {round}</p>
+          <p className="text-secondary" style={{ marginTop: '0.3rem', fontSize: '0.9rem' }}>{t('round')} {round}</p>
           {timeLeft !== null && (
             <p style={{ marginTop: '0.3rem', fontSize: '1.2rem', fontWeight: 'bold', color: timeLeft <= 10 ? 'var(--accent-red)' : 'var(--accent-blue)' }}>
-              ⏳ Осталось: {timeLeft} сек
+              {t('time_left')} {timeLeft} {t('sec')}
             </p>
           )}
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <p className="text-secondary" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Ваша роль</p>
+          <p className="text-secondary" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('your_role')}</p>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-red)' }}>{roleNames[myRole] || myRole}</h3>
-          {!amIAlive && <span style={{ fontSize: '0.8rem', color: 'gray' }}>Убит</span>}
+          {!amIAlive && <span style={{ fontSize: '0.8rem', color: 'gray' }}>{t('dead')}</span>}
         </div>
       </motion.div>
 
@@ -151,9 +153,9 @@ export default function Game({ gameState, myId, onAction, isHost }) {
           >
             <ShieldAlert size={24} color="var(--accent-red)" />
             <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 600 }}>Действие требуется</p>
+              <p style={{ fontWeight: 600 }}>{t('action_required')}</p>
               <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
-                {isNight ? 'Выберите вашу цель на эту ночь.' : 'Выберите, кого изгнать на дневном голосовании.'}
+                {isNight ? t('action_night') : t('action_vote')}
               </p>
             </div>
           </motion.div>
@@ -178,7 +180,7 @@ export default function Game({ gameState, myId, onAction, isHost }) {
           >
             <AlertTriangle size={24} color="var(--accent-red)" />
             <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 600, color: 'var(--accent-red)' }}>Переголосование!</p>
+              <p style={{ fontWeight: 600, color: 'var(--accent-red)' }}>{t('revote')}</p>
               <p className="text-secondary" style={{ fontSize: '0.85rem' }}>
                 {revoteData.message}
               </p>
@@ -204,9 +206,9 @@ export default function Game({ gameState, myId, onAction, isHost }) {
             }}
           >
             <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Город засыпает...</p>
+              <p style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{t('city_sleeps')}</p>
               <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                Подождите, пока активные роли сделают свой выбор. Сохраняйте тишину.
+                {t('city_sleeps_desc')}
               </p>
             </div>
           </motion.div>
@@ -292,7 +294,7 @@ export default function Game({ gameState, myId, onAction, isHost }) {
             style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 100 }}
           >
             <button className="btn-primary" style={{ padding: '1rem 3rem', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(255, 42, 95, 0.4)' }} onClick={confirmAction}>
-              Подтвердить выбор
+              {t('confirm_choice')}
             </button>
           </motion.div>
         )}
@@ -304,7 +306,7 @@ export default function Game({ gameState, myId, onAction, isHost }) {
             style={{ position: 'fixed', bottom: '2rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 100 }}
           >
             <div style={{ background: 'var(--glass-bg)', padding: '1rem 2rem', borderRadius: '30px', border: '1px solid var(--glass-border)', color: 'var(--text-primary)', fontWeight: 600 }}>
-               Действие принято. Ожидаем остальных...
+               {t('action_accepted')}
             </div>
           </motion.div>
         )}

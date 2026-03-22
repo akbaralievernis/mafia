@@ -9,22 +9,30 @@ export const VoiceTTS = {
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ru-RU'; // Russian text
-    utterance.rate = 1.0;     // Normal speed
-    utterance.pitch = 0.9;    // Slightly lower pitch for dramatic effect
+    const lang = localStorage.getItem('mafia_lang') || 'ru';
+    utterance.lang = lang === 'de' ? 'de-DE' : 'ru-RU';
+    utterance.rate = 1.0;
+    utterance.pitch = 0.9;
     utterance.volume = 1.0;
 
-    // Optional: try to find a premium/natural sounding voice
     const setVoice = () => {
       const voices = window.speechSynthesis.getVoices();
-      const ruVoices = voices.filter(v => v.lang.includes('ru'));
-      if (ruVoices.length > 0) {
-        // Try to pick a male/premium voice if available
-        const bestVoice = ruVoices.find(v => {
-          const name = v.name.toLowerCase();
-          return name.includes('yuri') || name.includes('pavel') || name.includes('dmitry') || name.includes('male') || name.includes('мужской');
-        }) || ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
-        utterance.voice = bestVoice;
+      
+      if (lang === 'de') {
+        const deVoices = voices.filter(v => v.lang.includes('de'));
+        if (deVoices.length > 0) {
+          const bestVoice = deVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || deVoices[0];
+          utterance.voice = bestVoice;
+        }
+      } else {
+        const ruVoices = voices.filter(v => v.lang.includes('ru'));
+        if (ruVoices.length > 0) {
+          const bestVoice = ruVoices.find(v => {
+            const name = v.name.toLowerCase();
+            return name.includes('yuri') || name.includes('pavel') || name.includes('dmitry') || name.includes('male') || name.includes('мужской');
+          }) || ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+          utterance.voice = bestVoice;
+        }
       }
       window.speechSynthesis.speak(utterance);
     };
