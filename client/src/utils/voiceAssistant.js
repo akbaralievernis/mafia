@@ -26,10 +26,13 @@ class VoiceAssistant {
     // Ищем Yandex, Google или любой доступный русский голос (ru-RU)
     const ruVoices = voices.filter(v => v.lang.includes('ru'));
     
-    // Предпочтение отдаем Google или премиальным голосам операционной системы
-    this.voice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Yuri') || v.name.includes('Milena')) 
-                 || ruVoices[0] 
-                 || voices[0];
+    // Предпочтение отдаем мужским дикторским голосам
+    this.voice = ruVoices.find(v => {
+      const name = v.name.toLowerCase();
+      return name.includes('yuri') || name.includes('pavel') || name.includes('dmitry') || name.includes('male') || name.includes('мужской');
+    }) || ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) 
+       || ruVoices[0] 
+       || voices[0];
   }
 
   toggleMute() {

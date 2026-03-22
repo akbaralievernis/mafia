@@ -22,6 +22,7 @@ class NightPhase {
    */
   start() {
     this.state.setPhase('night');
+    this._broadcastState(); // Рассказываем клиентам, что фаза сменилась!
     console.log(`[Комната ${this.state.id}] Наступила ночь. Раунд ${this.state.round}`);
     
     // Уведомляем всех, что началась ночь и запускаем таймер на клиентах
@@ -165,6 +166,12 @@ class NightPhase {
         wasSavedByDoctor: mafiaTarget === this.doctorTarget && mafiaTarget !== null
       });
     }
+  }
+
+  _broadcastState() {
+    this.state.players.forEach(p => {
+      this.io.to(p.id).emit('state_update', this.state.getSanitizedState(p.id));
+    });
   }
 }
 

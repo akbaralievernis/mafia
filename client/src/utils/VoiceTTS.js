@@ -19,8 +19,11 @@ export const VoiceTTS = {
       const voices = window.speechSynthesis.getVoices();
       const ruVoices = voices.filter(v => v.lang.includes('ru'));
       if (ruVoices.length > 0) {
-        // Try to pick a Google or premium voice if available
-        const bestVoice = ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
+        // Try to pick a male/premium voice if available
+        const bestVoice = ruVoices.find(v => {
+          const name = v.name.toLowerCase();
+          return name.includes('yuri') || name.includes('pavel') || name.includes('dmitry') || name.includes('male') || name.includes('мужской');
+        }) || ruVoices.find(v => v.name.includes('Google') || v.name.includes('Premium')) || ruVoices[0];
         utterance.voice = bestVoice;
       }
       window.speechSynthesis.speak(utterance);

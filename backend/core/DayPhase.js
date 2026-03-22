@@ -57,6 +57,7 @@ class DayPhase {
   startVoting() {
     this.state.setPhase('vote'); // Меняем флаг в GameState (чтобы принимались голоса)
     this.subPhase = 'voting';
+    this._broadcastState(); // ОБЯЗАТЕЛЬНО: уведомляем клиентов о новой фазе!
     
     console.log(`[Комната ${this.state.id}] Начало голосования.`);
     
