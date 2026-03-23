@@ -70,20 +70,40 @@ export default function Game({ gameState, myId, onAction, isHost }) {
   if (phase === 'end') {
     const isMafiaWin = gameOverData?.winners === 'mafia';
     return (
-      <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring' }}>
-          <h1 style={{ fontSize: '3rem', color: isMafiaWin ? 'var(--accent-red)' : 'var(--accent-blue)', marginBottom: '1rem', textTransform: 'uppercase' }}>
+      <div style={{ textAlign: 'center', padding: '4rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+        <motion.div 
+          initial={{ scale: 0.5, opacity: 0, y: 50 }} 
+          animate={{ scale: 1, opacity: 1, y: 0 }} 
+          transition={{ type: 'spring', bounce: 0.5, duration: 0.8 }}
+          style={{
+            background: 'var(--glass-bg)',
+            border: `2px solid ${isMafiaWin ? 'var(--accent-red)' : 'var(--accent-blue)'}`,
+            padding: '3rem 2rem',
+            borderRadius: '24px',
+            boxShadow: `0 0 40px ${isMafiaWin ? 'rgba(255, 42, 95, 0.4)' : 'rgba(0, 191, 255, 0.4)'}`
+          }}
+        >
+          <motion.h1 
+            initial={{ scale: 0.9 }} animate={{ scale: 1.1 }} transition={{ repeat: Infinity, repeatType: 'reverse', duration: 1.5 }}
+            style={{ fontSize: '3rem', color: isMafiaWin ? 'var(--accent-red)' : 'var(--accent-blue)', marginBottom: '1rem', textTransform: 'uppercase', textShadow: '0 0 10px currentColor' }}
+          >
             {t('game_over')}
-          </h1>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>
+          </motion.h1>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '2rem' }}>
             {isMafiaWin ? t('winners_mafia') : t('winners_citizens')}
           </h2>
-          <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '3rem', padding: '0 2rem' }}>
+          <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '3rem', maxWidth: '400px', margin: '0 auto 3rem auto' }}>
             {gameOverData?.message}
           </p>
-          <button className="btn-primary" onClick={() => window.location.href = '/'} style={{ padding: '1rem 3rem', borderRadius: '30px' }}>
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="btn-primary" 
+            onClick={() => window.location.href = '/'} 
+            style={{ padding: '1rem 3rem', borderRadius: '30px', fontSize: '1.1rem', fontWeight: 'bold' }}
+          >
             {t('return_to_lobby')}
-          </button>
+          </motion.button>
         </motion.div>
       </div>
     );
@@ -92,10 +112,10 @@ export default function Game({ gameState, myId, onAction, isHost }) {
   const isNight = phase === 'night';
   const isVoting = phase === 'vote';
 
-  const isActiveRole = ['mafia', 'doctor', 'detective'].includes(myRole);
+  const isActiveRole = ['don', 'mafia', 'doctor', 'detective', 'maniac'].includes(myRole);
 
-  // Разрешено ли выбирать: жив + (ночь и активная роль) или голосование
-  const canSelect = amIAlive && ((isNight && isActiveRole) || isVoting);
+  // Разрешено ли выбирать: жив + (ночь и сейчас ход вашей роли) или голосование
+  const canSelect = amIAlive && ((isNight && gameState.subPhase === myRole) || isVoting);
 
   const handleSelect = (targetId) => {
     if (!canSelect) return;
@@ -118,10 +138,22 @@ export default function Game({ gameState, myId, onAction, isHost }) {
   };
 
   const roleNames = {
+    don: t('role_don'),
     mafia: t('role_mafia'),
     doctor: t('role_doctor'),
     detective: t('role_detective'),
+    maniac: t('role_maniac'),
     citizen: t('role_citizen')
+  };
+
+  const roleDescriptions = {
+    don: t('desc_don'),
+    mafia: t('desc_mafia'),
+    doctor: t('desc_doctor'),
+    detective: t('desc_detective'),
+    maniac: t('desc_maniac'),
+    citizen: t('desc_citizen'),
+    spectator: t('desc_spectator')
   };
 
   return (
@@ -153,6 +185,24 @@ export default function Game({ gameState, myId, onAction, isHost }) {
           <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-red)' }}>{roleNames[myRole] || myRole}</h3>
           {!amIAlive && <span style={{ fontSize: '0.8rem', color: 'gray' }}>{t('dead')}</span>}
         </div>
+      </motion.div>
+
+      {/* Описание роли (Правило) */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderLeft: '4px solid var(--accent-purple)',
+          padding: '1rem',
+          borderRadius: '0 8px 8px 0',
+          marginTop: '-1rem',
+          fontSize: '0.9rem',
+          color: 'var(--text-secondary)',
+          lineHeight: '1.4'
+        }}
+      >
+        {roleDescriptions[myRole] || t('desc_spectator')}
       </motion.div>
 
       {/* Информационный тост действий */}
@@ -210,8 +260,8 @@ export default function Game({ gameState, myId, onAction, isHost }) {
           </motion.div>
         )}
         
-        {/* Сообщение для мирных жителей ночью */}
-        {isNight && !isActiveRole && amIAlive && (
+        {/* Сообщение для тех, чей ход еще не наступил ночью */}
+        {isNight && (!canSelect) && amIAlive && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -228,7 +278,14 @@ export default function Game({ gameState, myId, onAction, isHost }) {
             }}
           >
             <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{t('city_sleeps')}</p>
+              <p style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+                {gameState.subPhase === 'don' ? 'Дон мафии ищет комиссара...' : 
+                 gameState.subPhase === 'mafia' ? 'Мафия делает выбор...' : 
+                 gameState.subPhase === 'doctor' ? 'Доктор спешит на помощь...' : 
+                 gameState.subPhase === 'detective' ? 'Комиссар ищет мафию...' : 
+                 gameState.subPhase === 'maniac' ? 'Маньяк вышел на охоту...' : 
+                 t('city_sleeps')}
+              </p>
               <p className="text-secondary" style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
                 {t('city_sleeps_desc')}
               </p>

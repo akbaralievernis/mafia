@@ -86,17 +86,25 @@ export default function SpectatorScreen({ gameState }) {
           <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-purple)' }}>{t('spectator_active_roles')}</h3>
           <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <motion.p 
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              style={{ color: 'var(--text-secondary)' }}
+            >{t('spectator_don_chooses')}</motion.p>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
               style={{ color: 'var(--text-secondary)' }}
             >{t('spectator_mafia_chooses')}</motion.p>
             <motion.p 
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.4 }}
               style={{ color: 'var(--text-secondary)' }}
             >{t('spectator_doctor_chooses')}</motion.p>
             <motion.p 
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.5 }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.0 }}
               style={{ color: 'var(--text-secondary)' }}
             >{t('spectator_detective_chooses')}</motion.p>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.6 }}
+              style={{ color: 'var(--text-secondary)' }}
+            >{t('spectator_maniac_chooses')}</motion.p>
           </div>
         </div>
       ) : (

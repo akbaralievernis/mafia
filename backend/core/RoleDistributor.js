@@ -23,8 +23,16 @@ class RoleDistributor {
 
     const rolesArray = [];
 
-    // 1. Динамический баланс мафии (примерно 1 мафия на 3-4 мирных)
-    const mafiaCount = Math.floor(count / 4) || 1; 
+    // 1. Динамический баланс мафии
+    let mafiaCount = Math.floor(count / 4) || 1; 
+    
+    // Если игроков 10 и больше, добавляем специальные роли
+    if (count >= 10) {
+      rolesArray.push('don'); // Дон мафии
+      mafiaCount = Math.max(1, mafiaCount - 1); // Обычной мафии становится на 1 меньше (Дон заменяет мафию)
+      rolesArray.push('maniac'); // Маньяк
+    }
+
     for (let i = 0; i < mafiaCount; i++) rolesArray.push('mafia');
 
     // 2. Добавляем Доктора и Комиссара (при 4+ игроках всегда есть по 1)

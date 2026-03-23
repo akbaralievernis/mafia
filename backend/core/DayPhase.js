@@ -29,17 +29,22 @@ class DayPhase {
     
     console.log(`[Комната ${this.state.id}] Наступил День. Раунд ${this.state.round}. Обсуждение.`);
 
-    let killedPlayerName = null;
-    if (nightResults.killedPlayerId) {
-       killedPlayerName = this.state.players.find(p => p.id === nightResults.killedPlayerId)?.name || "Неизвестный";
+    let message = "Наступил день. Жители проснулись в целости и сохранности. Доктор кого-то спас, либо злоумышленники промахнулись!";
+    let killedNames = [];
+    
+    if (nightResults.multipleKills && nightResults.multipleKills.length > 0) {
+      killedNames = nightResults.multipleKills.map(id => this.state.players.find(p => p.id === id)?.name || "Неизвестный");
+      message = `Наступил день. Ночь выдалась кровавой. Убиты: ${killedNames.join(', ')}.`;
+    } else if (nightResults.killedPlayerId) {
+      let killedPlayerName = this.state.players.find(p => p.id === nightResults.killedPlayerId)?.name || "Неизвестный";
+      message = `Наступил день. Сделан страшный выбор. Убит игрок ${killedPlayerName}.`;
     }
 
     // 1. Показать результат ночи всем игрокам
     this.io.to(this.state.id).emit('day_started', {
-      killedPlayerId: nightResults.killedPlayerId,
-      message: killedPlayerName 
-        ? `Наступил день. Мафия сделала свой выбор. Убит игрок ${killedPlayerName}.` 
-        : "Наступил день. Жители проснулись в целости и сохранности. Доктор кого-то спас, либо мафия промахнулась!"
+      killedPlayerId: nightResults.killedPlayerId, // для совместимости
+      multipleKills: nightResults.multipleKills,
+      message: message
     });
 
     // Излучаем обновление состояния (убитый игрок станет { isAlive: false })

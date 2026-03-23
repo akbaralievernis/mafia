@@ -15,8 +15,10 @@ class NightPhase {
     this.mafiaVotes = {}; // { [mafiaId]: targetId } - кто за кого проголосовал из мафии
     this.doctorTarget = null;
     this.detectiveTarget = null;
+    this.donTarget = null;
+    this.maniacTarget = null;
 
-    this.subPhases = ['mafia', 'doctor', 'detective'];
+    this.subPhases = ['don', 'mafia', 'doctor', 'detective', 'maniac'];
     this.currentSubPhaseIndex = -1;
   }
 
@@ -104,7 +106,14 @@ class NightPhase {
     if (role !== this.state.subPhase) return { error: "Сейчас не ваш ход" };
 
     // 2. Логика для конкретных ролей
-    if (role === 'mafia') {
+    if (role === 'don') {
+      this.donTarget = targetId;
+      // Дон ищет комиссара
+      const targetRole = this.state.roles[targetId];
+      const isDetective = targetRole === 'detective';
+      this.io.to(playerId).emit('don_result', { targetId, isDetective });
+      
+    } else if (role === 'mafia') {
       this.mafiaVotes[playerId] = targetId; // Мафия голосует за цель
       
       // Рассылаем остальным живым мафиози обновленный статус выбора,
@@ -121,8 +130,13 @@ class NightPhase {
       this.detectiveTarget = targetId;
       // Детектив сразу получает ответ (или утром - зависит от правил, сделаем сразу для динамики)
       const targetRole = this.state.roles[targetId];
-      const isMafia = targetRole === 'mafia';
+      // Дон проверяется детективом как обычная мафия
+      const isMafia = targetRole === 'mafia' || targetRole === 'don';
       this.io.to(playerId).emit('detective_result', { targetId, isMafia });
+      
+    } else if (role === 'maniac') {
+      this.maniacTarget = targetId;
+      
     } else {
       return { error: "Ваша роль не имеет ночных действий" };
     }
@@ -139,13 +153,17 @@ class NightPhase {
     const aliveRoleIds = this.state.alivePlayers.filter(id => this.state.roles[id] === currentRole);
     
     let allActed = false;
-    if (currentRole === 'mafia') {
+    if (currentRole === 'don') {
+      allActed = this.donTarget !== null;
+    } else if (currentRole === 'mafia') {
       const currentMafiaVotes = Object.keys(this.mafiaVotes).length;
       allActed = currentMafiaVotes === aliveRoleIds.length;
     } else if (currentRole === 'doctor') {
       allActed = this.doctorTarget !== null;
     } else if (currentRole === 'detective') {
       allActed = this.detectiveTarget !== null;
+    } else if (currentRole === 'maniac') {
+      allActed = this.maniacTarget !== null;
     }
 
     if (allActed) {
@@ -176,28 +194,40 @@ class NightPhase {
     }
 
     // 2. Логика спасения Доктором
-    let killedPlayerId = null;
+    let killedPlayers = [];
+    
+    // Проверка жертв списком (может быть убит и от мафии, и от маньяка)
     if (mafiaTarget && mafiaTarget !== this.doctorTarget) {
-      // Доктор не угадал или не лечил
-      killedPlayerId = mafiaTarget;
-      // Убиваем физически в стейте (без this.isProcessingPhase = false)
-      this.state.killPlayer(killedPlayerId);
+      if (!killedPlayers.includes(mafiaTarget)) killedPlayers.push(mafiaTarget);
     }
+    
+    if (this.maniacTarget && this.maniacTarget !== this.doctorTarget) {
+      if (!killedPlayers.includes(this.maniacTarget)) killedPlayers.push(this.maniacTarget);
+    }
+    
+    // Убиваем физически в стейте всех жертв
+    killedPlayers.forEach(id => {
+      this.state.killPlayer(id);
+    });
 
     // Сохраняем в историю для отладки
     this.state.actions = {
+      don: this.donTarget,
       mafia: Object.values(this.mafiaVotes),
       doctor: this.doctorTarget,
-      detective: this.detectiveTarget
+      detective: this.detectiveTarget,
+      maniac: this.maniacTarget
     };
 
     this.state.isProcessingPhase = false;
 
-    // Вызываем коллбек (передаем управление обратно GameEngine/PhaseController)
+    // Вызываем коллбек (передаем управление обратно PhaseController)
+    // Возвращаем первую или null для совместимости с DayPhase, либо массив
     if (this.onNightEnd) {
       this.onNightEnd({
-        killedPlayerId: killedPlayerId,
-        wasSavedByDoctor: mafiaTarget === this.doctorTarget && mafiaTarget !== null
+        killedPlayerId: killedPlayers.length > 0 ? killedPlayers[0] : null,
+        multipleKills: killedPlayers,
+        wasSavedByDoctor: (mafiaTarget === this.doctorTarget && mafiaTarget !== null) || (this.maniacTarget === this.doctorTarget && this.maniacTarget !== null)
       });
     }
   }

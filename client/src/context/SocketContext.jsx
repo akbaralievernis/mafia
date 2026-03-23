@@ -89,7 +89,22 @@ export const SocketProvider = ({ children }) => {
 
     newSocket.on('phase_started', (data) => {
       if (data.phase === 'night') {
-        VoiceTTS.speak(t('tts_night_starts') + " " + t('tts_mafia_attacks'));
+        VoiceTTS.speak(t('tts_night_starts'));
+      }
+      handleGameEvent(data);
+    });
+
+    newSocket.on('night_subphase_started', (data) => {
+      if (data.subPhase === 'don') {
+        VoiceTTS.speak(t('tts_don_wakes'));
+      } else if (data.subPhase === 'mafia') {
+        VoiceTTS.speak(t('tts_mafia_wakes') + " " + t('tts_mafia_attacks'));
+      } else if (data.subPhase === 'doctor') {
+        VoiceTTS.speak(t('tts_doctor_wakes'));
+      } else if (data.subPhase === 'detective') {
+        VoiceTTS.speak(t('tts_detective_wakes'));
+      } else if (data.subPhase === 'maniac') {
+        VoiceTTS.speak(t('tts_maniac_wakes'));
       }
       handleGameEvent(data);
     });
