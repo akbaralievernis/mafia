@@ -9,12 +9,15 @@ class NightPhase {
     this.onNightEnd = onNightEndCallback;
 
     this.timer = null;
-    this.timeLeft = 30; // 30 секунд на ночь
+    this.timeLeft = 0; 
     
     // Временное хранилище ночных выборов (до наступления утра)
     this.mafiaVotes = {}; // { [mafiaId]: targetId } - кто за кого проголосовал из мафии
     this.doctorTarget = null;
     this.detectiveTarget = null;
+
+    this.subPhases = ['mafia', 'doctor', 'detective'];
+    this.currentSubPhaseIndex = -1;
   }
 
   /**
@@ -25,22 +28,48 @@ class NightPhase {
     this._broadcastState(); // Рассказываем клиентам, что фаза сменилась!
     console.log(`[Комната ${this.state.id}] Наступила ночь. Раунд ${this.state.round}`);
     
-    // Уведомляем всех, что началась ночь и запускаем таймер на клиентах
-    this.io.to(this.state.id).emit('phase_started', {
-      phase: 'night',
+    this.currentSubPhaseIndex = -1;
+    this.nextSubPhase();
+  }
+
+  /**
+   * Переход к следующей подочереди ночью (Мафия -> Доктор -> Детектив)
+   */
+  nextSubPhase() {
+    this.currentSubPhaseIndex++;
+    if (this.currentSubPhaseIndex >= this.subPhases.length) {
+      this.endNight();
+      return;
+    }
+
+    const currentRole = this.subPhases[this.currentSubPhaseIndex];
+    this.state.subPhase = currentRole;
+    this.timeLeft = 15; // 15 секунд на каждую активную роль
+
+    // Проверяем, есть ли живые игроки с этой ролью
+    const aliveWithRole = this.state.alivePlayers.filter(id => this.state.roles[id] === currentRole);
+    if (aliveWithRole.length === 0) {
+      // Если никого нет или убиты, переходим к следующей роли сразу
+      return this.nextSubPhase();
+    }
+
+    // Уведомляем клиентов о начале подочереди
+    this.io.to(this.state.id).emit('night_subphase_started', {
+      subPhase: currentRole,
       duration: this.timeLeft
     });
+    
+    this._broadcastState(); // Обновляем стейт с новой subPhase
 
     const AIBot = require('./AIBot');
     
-    // Триггерим автоматические ночные действия от AI-ботов
+    // Триггерим ботов для текущей роли
     this.state.players.forEach(p => {
-      if (p.isBot && this.state.alivePlayers.includes(p.id)) {
-        const action = AIBot.makeRandomAction(p.id, this.state.roles[p.id], 'night', this.state.alivePlayers);
+      if (p.isBot && this.state.alivePlayers.includes(p.id) && this.state.roles[p.id] === currentRole) {
+        const action = AIBot.makeRandomAction(p.id, currentRole, 'night', this.state.alivePlayers);
         if (action) {
           setTimeout(() => {
-             // Чтобы игра не падала если фаза уже прошла:
-            if (this.state.phase === 'night') {
+            if (this.state.phase === 'night' && this.state.subPhase === currentRole) {
               this.handleAction(p.id, action.targetId);
             }
           }, action.delay);
@@ -48,14 +77,15 @@ class NightPhase {
       }
     });
 
-    // Запускаем серверный таймер
+    if (this.timer) clearInterval(this.timer);
     this.timer = setInterval(() => {
       this.timeLeft -= 1;
       
-      this.io.to(this.state.id).emit('timer_update', { timeLeft: this.timeLeft, phase: this.state.phase });
+      this.io.to(this.state.id).emit('timer_update', { timeLeft: this.timeLeft, phase: this.state.phase, subPhase: currentRole });
 
       if (this.timeLeft <= 0) {
-        this.endNight(); // Авто-завершение/пропуск
+        clearInterval(this.timer);
+        this.nextSubPhase(); // Авто-пропуск хода роли
       }
     }, 1000);
   }
@@ -71,6 +101,8 @@ class NightPhase {
 
     const role = this.state.roles[playerId];
     
+    if (role !== this.state.subPhase) return { error: "Сейчас не ваш ход" };
+
     // 2. Логика для конкретных ролей
     if (role === 'mafia') {
       this.mafiaVotes[playerId] = targetId; // Мафия голосует за цель
@@ -100,26 +132,26 @@ class NightPhase {
   }
 
   /**
-   * Проверка: все ли активные роли сделали свой ход?
-   * Если да - нет смысла ждать таймер, завершаем ночь досрочно.
+   * Проверка: все ли игроки этой роли сделали свой ход?
    */
   checkEarlyEnd() {
-    const aliveMap = this.state.alivePlayers.reduce((acc, id) => {
-      acc[this.state.roles[id]] = (acc[this.state.roles[id]] || 0) + 1;
-      return acc;
-    }, {});
-
-    const expectedMafiaVotes = aliveMap['mafia'] || 0;
-    const currentMafiaVotes = Object.keys(this.mafiaVotes).length;
+    const currentRole = this.state.subPhase;
+    const aliveRoleIds = this.state.alivePlayers.filter(id => this.state.roles[id] === currentRole);
     
-    // Проверяем: если роль жива, сделала ли она выбор (или null)
-    const doctorActed = !aliveMap['doctor'] || this.doctorTarget !== null;
-    const detectiveActed = !aliveMap['detective'] || this.detectiveTarget !== null;
-    const mafiaActed = expectedMafiaVotes === 0 || currentMafiaVotes === expectedMafiaVotes;
+    let allActed = false;
+    if (currentRole === 'mafia') {
+      const currentMafiaVotes = Object.keys(this.mafiaVotes).length;
+      allActed = currentMafiaVotes === aliveRoleIds.length;
+    } else if (currentRole === 'doctor') {
+      allActed = this.doctorTarget !== null;
+    } else if (currentRole === 'detective') {
+      allActed = this.detectiveTarget !== null;
+    }
 
-    if (doctorActed && detectiveActed && mafiaActed) {
-      console.log(`[Комната ${this.state.id}] Все активные роли походили. Досрочное утро.`);
-      this.endNight();
+    if (allActed) {
+      clearInterval(this.timer);
+      console.log(`[Комната ${this.state.id}] ${currentRole} совершил выбор. Переход к следующей фазе.`);
+      this.nextSubPhase();
     }
   }
 

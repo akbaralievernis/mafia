@@ -9,6 +9,7 @@ class GameState {
     this.roles = {};           // Словарь ролей: { [playerId]: 'mafia' | 'doctor' | 'detective' | 'citizen' }
     this.alivePlayers = [];    // Массив ID живых игроков
     this.phase = "lobby";      // Текущая фаза: "lobby" | "night" | "day" | "vote" | "end"
+    this.subPhase = null;      // Подфаза ночи: "mafia" | "doctor" | "detective"
     this.round = 0;            // Номер текущего раунда (ночь + день = 1 раунд)
     
     // Голоса во время дневного голосования: { [voterId]: suspectId }
@@ -79,6 +80,7 @@ class GameState {
     this.isProcessingPhase = true;
     try {
       this.phase = newPhase;
+      this.subPhase = null; // Сбрасываем подфазу при смене основной фазы
       
       // При наступлении новой ночи увеличиваем номер раунда
       if (newPhase === 'night') {
@@ -166,6 +168,7 @@ class GameState {
     return {
       id: this.id,
       phase: this.phase,
+      subPhase: this.subPhase,
       round: this.round,
       alivePlayers: this.alivePlayers,
       // Раскрываем все роли только в конце игры
