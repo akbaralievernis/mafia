@@ -1,91 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../utils/i18n';
 
 /**
- * Важный UX-элемент: круговой (или линейный) таймер прогресса,
- * показывающий сколько времени осталось до авто-действия (завершение фазы).
- * 
- * @param {number} timeLeft - текущее оставшееся время (сек)
- * @param {number} totalTime - изначальное время фазы (сек) (например, 30 для ночи, 60 для дня)
- * @param {string} phase - текущая фаза, чтобы менять цвет и подпись
+ * Изолированный компонент таймера.
+ * Слушает события 'timer_update' и обновляется независимо, 
+ * не вызывая перерисовку всей сетки игроков.
  */
-export default function PhaseTimer({ timeLeft, totalTime, phase }) {
-  // Защита от деления на 0
-  const maxTime = totalTime || 1; 
+const PhaseTimer = ({ socket, initialTime, phase }) => {
+  const { t } = useTranslation();
+  const [timeLeft, setTimeLeft] = useState(initialTime || null);
 
-  // Вычисляем прогресс от 0 до 1
-  const progress = timeLeft / maxTime;
+  useEffect(() => {
+    if (!socket) return;
 
-  // Динамический цвет в зависимости от времени и фазы
-  let strokeColor = 'var(--accent-purple)'; 
-  if (phase === 'night') strokeColor = '#24243e'; // Темно-синий/индиго
-  if (phase === 'vote') strokeColor = 'var(--accent-red)';
-  
-  // Если времени мало (меньше 25%), пульсируем агрессивным красным
-  if (progress < 0.25) {
-    strokeColor = '#ff2a5f';
-  }
+    const handleTimer = (data) => {
+      setTimeLeft(data.timeLeft);
+    };
 
-  // Настройка круга
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - progress * circumference;
+    socket.on('timer_update', handleTimer);
+
+    return () => {
+      socket.off('timer_update', handleTimer);
+    };
+  }, [socket]);
+
+  // Сброс при смене фазы (опционально, так как сервер пришлет новые данные)
+  useEffect(() => {
+    // Не сбрасываем принудительно, доверяем серверу
+  }, [phase]);
+
+  if (timeLeft === null) return null;
+
+  const isLowTime = timeLeft <= 10;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ position: 'relative', width: '100px', height: '100px' }}>
-        
-        {/* Фоновый тусклый круг */}
-        <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
-          <circle 
-            cx="50" cy="50" r={radius} 
-            stroke="var(--glass-border)" 
-            strokeWidth="8" 
-            fill="transparent" 
-          />
-          {/* Анимированный круг прогресса */}
-          <motion.circle 
-            cx="50" cy="50" r={radius} 
-            stroke={strokeColor} 
-            strokeWidth="8" 
-            fill="transparent"
-            strokeDasharray={circumference}
-            animate={{ strokeDashoffset }}
-            transition={{ duration: 1, ease: 'linear' }}
-            strokeLinecap="round"
-          />
-        </svg>
-
-        {/* Текст в центре кольца */}
-        <div style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontWeight: 800,
-          fontSize: '1.5rem',
-          color: progress < 0.25 ? 'var(--accent-red)' : 'var(--text-primary)'
-        }}>
-          {timeLeft}
-        </div>
-      </div>
-      
-      <p className="text-secondary" style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
-        {timeLeft === 0 ? 'Время вышло!' : 'До авто-пропуска...'}
-      </p>
-    </div>
+    <p style={{ 
+      marginTop: '0.3rem', 
+      fontSize: '1.2rem', 
+      fontWeight: 'bold', 
+      color: isLowTime ? 'var(--accent-red)' : 'var(--accent-blue)',
+      transition: 'color 0.3s ease'
+    }}>
+      {t('time_left')} {timeLeft} {t('sec')}
+    </p>
   );
-}
+};
 
-// === Пример использования в Game.jsx: ===
-/*
-  import PhaseTimer from './PhaseTimer';
-
-  // В компоненте:
-  <PhaseTimer 
-    timeLeft={timerValue} 
-    totalTime={phase === 'day' ? 60 : 30} 
-    phase={phase} 
-  />
-*/
+export default React.memo(PhaseTimer);
