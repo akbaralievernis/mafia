@@ -17,9 +17,11 @@ class GameState {
     
     // Действия активных ролей ночью
     this.actions = {
-      mafia: [],               // Массив ID жертв, выбранных разными мафиози (для вычисления большинства)
-      doctor: null,            // ID игрока, которого лечит доктор
-      detective: null          // ID игрока, которого проверяет детектив
+      don: null,
+      mafia: [],
+      doctor: null,
+      detective: null,
+      maniac: null
     };
 
     // Защита от состояния гонки (рассинхронизации)
@@ -108,6 +110,9 @@ class GameState {
 
     // Записываем действие строго по роли
     switch (role) {
+      case 'don':
+        this.actions.don = targetId;
+        break;
       case 'mafia':
         this.actions.mafia.push(targetId);
         break;
@@ -116,6 +121,9 @@ class GameState {
         break;
       case 'detective':
         this.actions.detective = targetId;
+        break;
+      case 'maniac':
+        this.actions.maniac = targetId;
         break;
       default:
         return false;
@@ -148,9 +156,11 @@ class GameState {
    */
   resetActions() {
     this.actions = {
+      don: null,
       mafia: [],
       doctor: null,
-      detective: null
+      detective: null,
+      maniac: null
     };
   }
 
@@ -163,7 +173,7 @@ class GameState {
   getSanitizedState(playerId) {
     const isGameEnded = this.phase === 'end';
     const myRole = this.roles[playerId];
-    const isMafia = myRole === 'mafia';
+    const isMafiaTeam = myRole === 'mafia' || myRole === 'don';
 
     return {
       id: this.id,
@@ -173,7 +183,7 @@ class GameState {
       alivePlayers: this.alivePlayers,
       // Раскрываем все роли только в конце игры
       // Во время игры игрок видит только свою роль (и мафия видит мафию)
-      roles: isGameEnded ? this.roles : this._getVisibleRoles(isMafia, playerId),
+      roles: isGameEnded ? this.roles : this._getVisibleRoles(isMafiaTeam, playerId),
       // Голосующие видят публичные голоса (кто за кого)
       votes: this.phase === 'vote' ? this.votes : {},
       // Личные результаты или текущий статус отправляются отдельно от общего стейта, 
@@ -190,19 +200,21 @@ class GameState {
   /**
    * Приватный метод вычисления видимых ролей для конкретного клиента
    */
-  _getVisibleRoles(isMafia, myId) {
+  _getVisibleRoles(isMafiaTeam, myId) {
     const visibleRoles = {};
     if (this.roles[myId] === 'spectator') {
       return visibleRoles; // Зритель не видит никаких ролей!
     }
 
-    if (isMafia) {
-      // Мафия знает всех остальных мафиози
+    if (isMafiaTeam) {
+      // Мафия и Дон знают друг друга
       Object.keys(this.roles).forEach(id => {
-        if (this.roles[id] === 'mafia') visibleRoles[id] = 'mafia';
+        if (this.roles[id] === 'mafia' || this.roles[id] === 'don') {
+          visibleRoles[id] = this.roles[id];
+        }
       });
     } else {
-      // Мирный/Шериф/Доктор видят только себя
+      // Мирный/Шериф/Доктор/Маньяк видят только себя
       if (this.roles[myId]) visibleRoles[myId] = this.roles[myId];
     }
     return visibleRoles;
