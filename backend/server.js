@@ -234,6 +234,7 @@ io.on('connection', (socket) => {
       const playerIndex = room.players.findIndex(p => p.id === socket.id);
       
       if (playerIndex !== -1) {
+        const disconnectedPlayer = room.players[playerIndex];
         // Удаляем из комнаты ТОЛЬКО ЕСЛИ игра еще не началась!
         // Иначе игрок должен оставаться в истории, чтобы иметь возможность переподключиться.
         if (room.status === 'lobby') {
