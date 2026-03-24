@@ -73,18 +73,16 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
     };
   }, [socket]);
 
-  if (!gameState || !gameState.roles) return null;
-
-  const { phase, round, roles, gameOverData } = gameState;
-  const alivePlayers = gameState.alivePlayers || [];
-  const players = gameState.players || [];
-  const myRole = roles[myId] || 'citizen';
+  const { phase, round, roles, gameOverData } = gameState || {};
+  const alivePlayers = gameState?.alivePlayers || [];
+  const players = gameState?.players || [];
+  const myRole = roles ? (roles[myId] || 'citizen') : 'citizen';
   const amIAlive = alivePlayers.includes(myId);
 
   // Phase logic
   const isNight = phase === 'night';
   const isVoting = phase === 'vote';
-  const canSelect = amIAlive && ((isNight && gameState.subPhase === myRole) || isVoting);
+  const canSelect = amIAlive && ((isNight && gameState?.subPhase === myRole) || isVoting);
 
   // Event handlers
   const handleSelect = useCallback((targetId) => {
@@ -102,6 +100,8 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
       setHasActed(true);
     }
   }, [selectedId, onAction]);
+
+  if (!gameState || !roles) return null;
 
   if (phase === 'end') {
     const isMafiaWin = gameOverData?.winners === 'mafia';
