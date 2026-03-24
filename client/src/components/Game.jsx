@@ -27,7 +27,7 @@ const getRoleData = (t) => ({
   }
 });
 
-export default function Game({ gameState, myId, onAction, isHost }) {
+const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
   const { t } = useTranslation();
   const { socket } = useSocket();
   const [selectedId, setSelectedId] = useState(null);
@@ -219,4 +219,6 @@ export default function Game({ gameState, myId, onAction, isHost }) {
       </AnimatePresence>
     </div>
   );
-}
+});
+
+export default Game;

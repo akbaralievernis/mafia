@@ -19,13 +19,13 @@ const PlayerCard = ({
 }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: isDead ? 0.35 : 1, y: 0 }}
+      transition={{ duration: 0.2 }}
       className={`player-card ${isSelected ? 'selected' : ''} ${isDead ? 'dead' : ''}`}
       onClick={() => !isDead && onSelect(player.id)}
-      whileTap={{ scale: canSelect && !isDead ? 0.95 : 1 }}
-      // Оптимизация: отключаем тяжелые анимации если их слишком много или устройство слабое
-      // В данном случае просто упрощаем стили
+      whileTap={{ scale: canSelect && !isDead ? 0.98 : 1 }}
+      style={{ willChange: 'transform, opacity' }}
     >
       <div className="player-number">{index + 1}</div>
       

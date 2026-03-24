@@ -11,7 +11,6 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [roomData, setRoomData] = useState(null);
   const [error, setError] = useState(null);
-  const [timer, setTimer] = useState(0);
   const [gameEvent, setGameEvent] = useState(null);
   const [privateMessage, setPrivateMessage] = useState(null);
   
@@ -109,9 +108,6 @@ export const SocketProvider = ({ children }) => {
       handleGameEvent(data);
     });
 
-    newSocket.on('timer', (time) => {
-      setTimer(time);
-    });
 
     newSocket.on('privateMessage', (msg) => {
       setPrivateMessage(msg);
@@ -126,8 +122,12 @@ export const SocketProvider = ({ children }) => {
     return () => newSocket.close();
   }, []);
 
+  const value = React.useMemo(() => ({ 
+    socket, roomData, setRoomData, error, gameEvent, privateMessage 
+  }), [socket, roomData, error, gameEvent, privateMessage]);
+
   return (
-    <SocketContext.Provider value={{ socket, roomData, setRoomData, error, timer, gameEvent, privateMessage }}>
+    <SocketContext.Provider value={value}>
       {children}
     </SocketContext.Provider>
   );

@@ -16,25 +16,35 @@ const RoomRouter = () => {
     }
   }, [roomData, navigate]);
 
-  if (!roomData || !socket) return null;
-
-  // Ищем реальный ID игрока (он мог измениться при реконнекте socket.id, поэтому ищем по имени)
   const playerName = localStorage.getItem('playerName');
-  const myPlayer = roomData.players?.find(p => p.name === playerName);
-  const myId = myPlayer ? myPlayer.id : socket.id;
-  const isHost = myPlayer ? myPlayer.isHost : false;
+  
+  // Memoized derived values
+  const { myId, isHost } = React.useMemo(() => {
+    if (!roomData) return { myId: null, isHost: false };
+    const myPlayer = roomData.players?.find(p => p.name === playerName);
+    return {
+      myId: myPlayer ? myPlayer.id : (socket?.id || null),
+      isHost: myPlayer ? myPlayer.isHost : false
+    };
+  }, [roomData, socket, playerName]);
 
-  const handleStart = () => {
-    socket.emit('start_game', { roomCode: roomData.id });
-  };
-
-  const handleAction = (targetId) => {
-    if (roomData.phase === 'night') {
-      socket.emit('night_action', { roomCode: roomData.id, targetId });
-    } else if (roomData.phase === 'vote') {
-      socket.emit('day_vote', { roomCode: roomData.id, targetId });
+  const handleStart = React.useCallback(() => {
+    if (socket && roomData) {
+      socket.emit('start_game', { roomCode: roomData.id });
     }
-  };
+  }, [socket, roomData?.id]);
+
+  const handleAction = React.useCallback((targetId) => {
+    if (socket && roomData) {
+      if (roomData.phase === 'night') {
+        socket.emit('night_action', { roomCode: roomData.id, targetId });
+      } else if (roomData.phase === 'vote') {
+        socket.emit('day_vote', { roomCode: roomData.id, targetId });
+      }
+    }
+  }, [socket, roomData?.id, roomData?.phase]);
+
+  if (!roomData || !socket) return null;
 
   if (roomData.status === 'lobby') {
     return <Lobby roomData={roomData} isHost={isHost} onStart={handleStart} />;
