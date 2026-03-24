@@ -20,6 +20,7 @@ class NightPhase {
 
     this.subPhases = ['don', 'mafia', 'doctor', 'detective', 'maniac'];
     this.currentSubPhaseIndex = -1;
+    this.isTransitioning = false; // Guard against multiple nextSubPhase calls
   }
 
   /**
@@ -38,6 +39,9 @@ class NightPhase {
    * Переход к следующей подочереди ночью (Мафия -> Доктор -> Детектив)
    */
   nextSubPhase() {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+
     this.currentSubPhaseIndex++;
     if (this.currentSubPhaseIndex >= this.subPhases.length) {
       this.endNight();
@@ -80,6 +84,8 @@ class NightPhase {
     });
 
     if (this.timer) clearInterval(this.timer);
+    this.isTransitioning = false; // Reset after setting up new subphase
+
     this.timer = setInterval(() => {
       this.timeLeft -= 1;
       

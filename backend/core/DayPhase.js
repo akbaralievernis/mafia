@@ -17,6 +17,7 @@ class DayPhase {
     
     // Внутренний статус фазы дня: 'discussion' (обсуждение) или 'voting' (само голосование)
     this.subPhase = 'discussion'; 
+    this.isFinishing = false; // Guard against multiple endDay calls
   }
 
   /**
@@ -150,6 +151,9 @@ class DayPhase {
    * Подсчет голосов и изгнание игрока
    */
   endDay() {
+    if (this.isFinishing) return;
+    this.isFinishing = true;
+
     clearInterval(this.timer);
     this.state.isProcessingPhase = true;
 
@@ -180,6 +184,7 @@ class DayPhase {
       // НАЧИНАЕМ ПЕРЕГОЛОСОВАНИЕ
       console.log(`[Комната ${this.state.id}] Ничья. Запуск переголосования между: ${this.tiedCandidates.join(', ')}`);
       this.subPhase = 'revoting';
+      this.isFinishing = false; // Allow one more finish for the revote
       this.state.votes = {}; // Сбрасываем голоса
       this.state.isProcessingPhase = false;
       
@@ -199,6 +204,10 @@ class DayPhase {
   }
 
   endRevote() {
+    if (this.isFinishing && this.subPhase !== 'revoting') return;
+    // Note: revoting uses the same flag but requires special handling if interrupted
+    this.isFinishing = true;
+
     clearInterval(this.timer);
     this.state.isProcessingPhase = true;
 

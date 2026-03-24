@@ -43,7 +43,11 @@ class GameEngine {
   }
 
   startNight() {
-    if (WinChecker.checkWin(this.state, this.io)) return;
+    if (this.state.phase === 'end' || WinChecker.checkWin(this.state, this.io)) return;
+
+    // Cleanup old phase if exists
+    if (this.dayPhase && this.dayPhase.timer) clearInterval(this.dayPhase.timer);
+    this.dayPhase = null;
 
     this.nightPhase = new NightPhase(this.state, this.io, (results) => {
       // Callback when night ends
@@ -55,7 +59,11 @@ class GameEngine {
   }
 
   startDay(nightResults) {
-    if (WinChecker.checkWin(this.state, this.io)) return;
+    if (this.state.phase === 'end' || WinChecker.checkWin(this.state, this.io)) return;
+
+    // Cleanup old phase if exists
+    if (this.nightPhase && this.nightPhase.timer) clearInterval(this.nightPhase.timer);
+    this.nightPhase = null;
 
     this.dayPhase = new DayPhase(this.state, this.io, (results) => {
       // Callback when day ends
