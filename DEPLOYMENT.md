@@ -4,9 +4,9 @@
 
 ---
 
-## 1. Деплой Бэкенда (Render.com или Railway.app)
+## 1. Деплой Бэкенда (Railway / Render / VPS)
 
-Бэкенд-сервер управляет игровыми комнатами и Socket.io. **Render.com** предлагает бесплатный тариф для WebSocket-серверов.
+Бэкенд-сервер управляет игровыми комнатами и Socket.io. Для игры в реальном времени рекомендован **always-on инстанс** (не sleep/free режим), чтобы избежать лагов на реконнекте.
 
 ### Инструкция для Render:
 1. Запушьте код папки `backend/` на GitHub (создайте отдельный репозиторий или папку в монорепе).
@@ -16,12 +16,13 @@
    - **Root Directory**: `backend` (если это монорепозиторий)
    - **Build Command**: `npm install`
    - **Start Command**: `node server.js`
-5. В разделе **Environment Variables** добавьте переменные из файла `.env.example`:
-   - `PORT` = `10000` (Render подставит свой порт динамически)
-   - `CLIENT_URL` = (Укажите позже, когда задеплоите фронтенд)
+5. В разделе **Environment Variables** добавьте:
    - `NODE_ENV` = `production`
-6. Нажмите **Deploy**.
-7. Скопируйте выделенный вам домен (например, `https://my-mafia-api.onrender.com`).
+   - `ALLOWED_ORIGINS` = `https://your-frontend-domain.vercel.app`
+   - `PORT` не фиксируйте вручную (провайдер подставляет динамически)
+6. Для Railway/Render выберите тариф без сна (always-on) и добавьте запас CPU/RAM для Socket.io.
+7. Нажмите **Deploy**.
+8. Скопируйте выделенный вам домен (например, `https://my-mafia-api.onrender.com`).
 
 ---
 
@@ -33,16 +34,21 @@ Vercel идеально подходит для проектов на Vite и о
 1. Зарегистрируйтесь на [Vercel.com](https://vercel.com) и нажмите **Add New Project**.
 2. Подключите репозиторий с игрой. Если это монорепо, выберите папку `client/` как **Root Directory**.
 3. Vercel автоматически распознает фреймворк **Vite**.
-4. Зайдите в раздел **Environment Variables** и добавьте связь с вашем сервером:
-   - `VITE_API_URL` = `https://my-mafia-api.onrender.com` (Вставьте URL, полученный в шаге 1)
+4. Зайдите в раздел **Environment Variables** и добавьте связь с вашим сервером:
+   - `VITE_SERVER_URL` = `https://my-mafia-api.onrender.com` (основная переменная клиента)
+   - `VITE_SOCKET_TRANSPORTS` = `websocket,polling` (или `websocket` для минимальной задержки при стабильной сети)
 5. Нажмите **Deploy**.
 6. Vercel выдаст вам красивый домен (например, `https://mafia-game.vercel.app`).
 
 ---
 
-## 3. Финальная связка CORS
+## 3. Финальная связка CORS и стабильности
 
-Вернитесь в настройки вашего бэкенда на Render/Railway и обновите переменную `CLIENT_URL`, вставив туда домен фронтенда от Vercel (`https://mafia-game.vercel.app`). Это необходимо для безопасной настройки CORS в Socket.io, чтобы сервер принимал подключения только от вашего сайта.
+Вернитесь в настройки вашего бэкенда на Render/Railway и обновите переменную `ALLOWED_ORIGINS`, вставив туда домен фронтенда от Vercel (`https://mafia-game.vercel.app`). Это необходимо для корректной настройки CORS в Socket.io.
+
+Также проверьте:
+- `GET /ping` → должен возвращать `pong`
+- `GET /health` → должен возвращать `ok: true` и текущий uptime/количество комнат
 
 ---
 
