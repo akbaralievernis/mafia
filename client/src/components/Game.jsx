@@ -29,7 +29,7 @@ const getRoleData = (t) => ({
 
 const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
   const { t } = useTranslation();
-  const { socket } = useSocket();
+  const { socket, myRole: contextRole } = useSocket();
   const [selectedId, setSelectedId] = useState(null);
   const [hasActed, setHasActed] = useState(false);
   const [currentVotes, setCurrentVotes] = useState({});
@@ -76,7 +76,8 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
   const { phase, round, roles, gameOverData } = gameState || {};
   const alivePlayers = gameState?.alivePlayers || [];
   const players = gameState?.players || [];
-  const myRole = roles ? (roles[myId] || 'citizen') : 'citizen';
+  // Use role from context (private) or fall back to gameState (if host/spectator)
+  const effectiveRole = contextRole || (gameState?.roles ? gameState.roles[myId] : 'citizen');
   const amIAlive = alivePlayers.includes(myId);
 
   // Phase logic
@@ -147,14 +148,14 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
 
         <div style={{ textAlign: 'right' }}>
           <p className="text-secondary" style={{ fontSize: '0.75rem', textTransform: 'uppercase' }}>{t('your_role')}</p>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-red)' }}>{roleNames[myRole] || myRole}</h3>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-red)' }}>{roleNames[effectiveRole] || effectiveRole}</h3>
           {!amIAlive && <span style={{ fontSize: '0.75rem', color: 'gray' }}>{t('dead')}</span>}
         </div>
       </motion.div>
 
       {/* Role Rule Card */}
       <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderLeft: '4px solid var(--accent-purple)', padding: '1rem', borderRadius: '0 8px 8px 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-        {roleDescriptions[myRole] || t('desc_spectator')}
+        {roleDescriptions[effectiveRole] || t('desc_spectator')}
       </div>
 
       <AnimatePresence mode="popLayout">
@@ -178,6 +179,22 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
                gameState.subPhase === 'maniac' ? 'Маньяк вышел на охоту...' : 
                t('city_sleeps')}
             </p>
+          </motion.div>
+        )}
+
+        {phase === 'day' && gameState?.subPhase === 'results' && (
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel" style={{ padding: '1.5rem', border: '1px solid var(--accent-blue)', textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-blue)' }}>Итоги ночи</h3>
+            <p style={{ marginBottom: '1.5rem' }}>
+              {gameState.nightResults?.killedIds?.length > 0 
+                ? `Этой ночью город покинули: ${gameState.nightResults.killedIds.map(id => players.find(p => p.id === id)?.name).join(', ')}`
+                : 'Ночь прошла спокойно. Все живы!'}
+            </p>
+            {isHost && (
+              <p className="text-secondary" style={{ fontSize: '0.8rem', marginTop: '1rem' }}>
+                Ожидание завершения обсуждения... (автоматический переход)
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

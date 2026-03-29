@@ -83,19 +83,21 @@ export default function Home() {
     localStorage.setItem('playerName', name);
     
     if (code.trim()) {
-      socket.emit('join_room', { roomCode: code.toUpperCase(), playerName: name, avatar }, (response) => {
-        if (response.success) {
-          setRoomData(response.room);
+      socket.emit('join_room', { roomCode: code.toUpperCase(), playerName: name, avatar }, (result) => {
+        if (result.success) {
+          setRoomData(result.room);
+          navigate(`/room/${result.room.id}`);
         } else {
-          alert(response.error || "Ошибка подключения");
+          alert(result.error || "Ошибка подключения");
         }
       });
     } else {
-      socket.emit('create_room', { playerName: name, avatar }, (response) => {
-        if (response.success) {
-          setRoomData(response.room);
+      socket.emit('create_room', { playerName: name, avatar }, (result) => {
+        if (result.success) {
+          setRoomData(result.room);
+          navigate(`/room/${result.room.id}`);
         } else {
-          alert(response.error || "Ошибка создания комнаты");
+          alert(result.error || "Ошибка создания комнаты");
         }
       });
     }

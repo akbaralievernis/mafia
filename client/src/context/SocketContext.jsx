@@ -22,92 +22,27 @@ export const SocketProvider = ({ children }) => {
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      // Пытаемся восстановить сессию, если произошел обрыв связи (например, свернули браузер на телефоне)
-      setRoomData(currentRoom => {
-        if (currentRoom && currentRoom.id) {
-          const playerName = localStorage.getItem('playerName');
-          if (playerName) {
-            newSocket.emit('reconnect_room', { roomCode: currentRoom.id, playerName });
-          }
-        }
-        return currentRoom;
-      });
-    });
-
-    newSocket.on('game_started', (data) => {
-      setRoomData(prev => ({ ...prev, ...data }));
-      if (data.event) {
-        setGameEvent(data.event);
-        setTimeout(() => setGameEvent(null), 5000);
+      // Пытаемся восстановить сессию
+      const lastRoomId = localStorage.getItem('lastRoomId');
+      const playerName = localStorage.getItem('playerName');
+      if (lastRoomId && playerName) {
+        newSocket.emit('reconnect_room', { roomCode: lastRoomId, playerName });
       }
-    });
-
-    // Обработка обновлений стейта игры (рассылается сервером)
-    newSocket.on('state_update', (data) => {
-      setRoomData(prev => ({ ...prev, ...data }));
-    });
-
-    newSocket.on('game_updated', (data) => {
-      setRoomData(prev => ({ ...prev, ...data }));
     });
 
     newSocket.on('room_updated', (data) => {
-      setRoomData(prev => prev ? { ...prev, ...data } : data);
+      setRoomData(data);
+      if (data.id) localStorage.setItem('lastRoomId', data.id);
     });
 
-    newSocket.on('game_over', (data) => {
-      VoiceTTS.speak(data.message);
-      setRoomData(prev => ({ ...prev, phase: 'end', gameOverData: data }));
+    newSocket.on('game_started', (data) => {
+      setRoomData(data);
+      if (data.id) localStorage.setItem('lastRoomId', data.id);
     });
 
-    // Обработка игровых событий и тостов
-    const handleGameEvent = (data) => {
-      setGameEvent(data);
-      setTimeout(() => setGameEvent(null), 5000);
-    };
-
-    newSocket.on('day_started', (data) => {
-      VoiceTTS.speak(t('tts_day_starts'));
-      handleGameEvent(data);
+    newSocket.on('state_update', (data) => {
+      setRoomData(prev => ({ ...prev, ...data }));
     });
-
-    newSocket.on('voting_started', (data) => {
-      VoiceTTS.speak(t('tts_voting_time'));
-      handleGameEvent(data);
-    });
-
-    newSocket.on('voting_result', (data) => {
-      VoiceTTS.speak(data.message); // Сервер присылает имя убитого, лучше озвучить как есть (имя) или добавить ключ в будущем
-      handleGameEvent(data);
-    });
-
-    newSocket.on('revote_started', (data) => {
-      VoiceTTS.speak(t('revote'));
-      handleGameEvent(data);
-    });
-
-    newSocket.on('phase_started', (data) => {
-      if (data.phase === 'night') {
-        VoiceTTS.speak(t('tts_night_starts'));
-      }
-      handleGameEvent(data);
-    });
-
-    newSocket.on('night_subphase_started', (data) => {
-      if (data.subPhase === 'don') {
-        VoiceTTS.speak(t('tts_don_wakes'));
-      } else if (data.subPhase === 'mafia') {
-        VoiceTTS.speak(t('tts_mafia_wakes') + " " + t('tts_mafia_attacks'));
-      } else if (data.subPhase === 'doctor') {
-        VoiceTTS.speak(t('tts_doctor_wakes'));
-      } else if (data.subPhase === 'detective') {
-        VoiceTTS.speak(t('tts_detective_wakes'));
-      } else if (data.subPhase === 'maniac') {
-        VoiceTTS.speak(t('tts_maniac_wakes'));
-      }
-      handleGameEvent(data);
-    });
-
 
     newSocket.on('privateMessage', (msg) => {
       setPrivateMessage(msg);
@@ -122,8 +57,33 @@ export const SocketProvider = ({ children }) => {
     return () => newSocket.close();
   }, []);
 
+  // Handle TTS and events from roomData changes
+  useEffect(() => {
+    if (!roomData) return;
+
+    // Phase Change TTS
+    if (roomData.phase === 'night' && roomData.subPhase === 'don') {
+       VoiceTTS.speak(t('tts_night_starts') + ". " + t('tts_don_wakes'));
+    } else if (roomData.phase === 'day' && roomData.subPhase === 'results') {
+       VoiceTTS.speak(t('tts_day_starts'));
+    } else if (roomData.phase === 'vote') {
+       VoiceTTS.speak(t('tts_voting_time'));
+    } else if (roomData.status === 'end') {
+       VoiceTTS.speak(roomData.gameOverData?.message || t('game_over'));
+    }
+
+    // SubPhase Specific TTS
+    if (roomData.phase === 'night') {
+      const sub = roomData.subPhase;
+      if (sub === 'mafia') VoiceTTS.speak(t('tts_mafia_wakes') + " " + t('tts_mafia_attacks'));
+      else if (sub === 'doctor') VoiceTTS.speak(t('tts_doctor_wakes'));
+      else if (sub === 'detective') VoiceTTS.speak(t('tts_detective_wakes'));
+      else if (sub === 'maniac') VoiceTTS.speak(t('tts_maniac_wakes'));
+    }
+  }, [roomData?.phase, roomData?.subPhase, roomData?.status]);
+
   const value = React.useMemo(() => ({ 
-    socket, roomData, setRoomData, error, gameEvent, privateMessage 
+    socket, roomData, setRoomData, error, gameEvent, privateMessage
   }), [socket, roomData, error, gameEvent, privateMessage]);
 
   return (

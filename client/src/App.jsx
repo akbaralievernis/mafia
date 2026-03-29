@@ -21,6 +21,8 @@ const RoomRouter = () => {
   // Memoized derived values
   const { myId, isHost } = React.useMemo(() => {
     if (!roomData) return { myId: null, isHost: false };
+    
+    // In Socket.io version, players might have different IDs
     const myPlayer = roomData.players?.find(p => p.name === playerName);
     return {
       myId: myPlayer ? myPlayer.id : (socket?.id || null),
@@ -29,13 +31,13 @@ const RoomRouter = () => {
   }, [roomData, socket, playerName]);
 
   const handleStart = React.useCallback(() => {
-    if (socket && roomData) {
+    if (roomData?.id && socket) {
       socket.emit('start_game', { roomCode: roomData.id });
     }
-  }, [socket, roomData?.id]);
+  }, [roomData?.id, socket]);
 
   const handleAction = React.useCallback((targetId) => {
-    if (socket && roomData) {
+    if (roomData?.id && socket) {
       if (roomData.phase === 'night') {
         socket.emit('night_action', { roomCode: roomData.id, targetId });
       } else if (roomData.phase === 'vote') {
@@ -62,7 +64,7 @@ function App() {
       setIsDark(true);
     }
 
-    // Keep the Render connection alive by pinging the backend periodically
+    // Keep the Render/Railway connection alive by pinging the backend periodically
     const envURL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
     const interval = setInterval(() => {
       fetch(`${envURL}/ping`).catch(() => {});
