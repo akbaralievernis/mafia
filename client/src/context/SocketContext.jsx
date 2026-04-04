@@ -15,9 +15,19 @@ export const SocketProvider = ({ children }) => {
   const [privateMessage, setPrivateMessage] = useState(null);
   
   useEffect(() => {
-    const envURL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    const envURL = import.meta.env.VITE_SERVER_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const transports = (import.meta.env.VITE_SOCKET_TRANSPORTS || 'websocket,polling')
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
+
     const newSocket = io(envURL, {
-      transports: ['websocket', 'polling']
+      transports,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 5000,
+      timeout: 10000
     });
     setSocket(newSocket);
 
@@ -52,6 +62,11 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('error', (msg) => {
       setError(msg.message || msg);
       setTimeout(() => setError(null), 3000);
+    });
+
+    newSocket.on('connect_error', (err) => {
+      setError(err.message || 'Connection error');
+      setTimeout(() => setError(null), 4000);
     });
 
     return () => newSocket.close();

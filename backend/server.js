@@ -2,13 +2,23 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+require('dotenv').config();
 const GameEngine = require('./core/GameEngine');
 
 const app = express();
 
+const envOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 const allowedOrigins = (origin, callback) => {
   if (!origin) return callback(null, true);
-  if (origin.startsWith('http://localhost:') || origin.endsWith('.vercel.app')) {
+  if (
+    origin.startsWith('http://localhost:') ||
+    origin.endsWith('.vercel.app') ||
+    envOrigins.includes(origin)
+  ) {
     return callback(null, true);
   }
   callback(new Error('Not allowed by CORS'));
@@ -26,12 +36,28 @@ app.get('/ping', (req, res) => {
   res.status(200).send('pong');
 });
 
+app.get('/health', (_req, res) => {
+  res.status(200).json({
+    ok: true,
+    uptime: process.uptime(),
+    rooms: rooms.size
+  });
+});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  allowUpgrades: true,
+  pingInterval: 25000,
+  pingTimeout: 20000,
+  perMessageDeflate: false,
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000
   }
 });
 
@@ -77,6 +103,7 @@ io.on('connection', (socket) => {
 
     rooms.set(roomCode, newRoom);
     socket.join(roomCode);
+    socket.join(player.id);
 
     console.log(`Комната ${roomCode} создана игроком ${playerName}`);
     
@@ -115,6 +142,7 @@ io.on('connection', (socket) => {
 
     room.players.push(player);
     socket.join(roomCode);
+    socket.join(player.id);
 
     // Отменяем таймер уничтожения комнаты, если кто-то зашел
     if (room.destroyTimer) {
@@ -231,7 +259,9 @@ io.on('connection', (socket) => {
     console.log('Отключение:', socket.id);
     
     for (const [roomCode, room] of rooms.entries()) {
-      const playerIndex = room.players.findIndex(p => p.id === socket.id);
+      const playerIndex = room.players.findIndex(
+        p => p.id === socket.id || p.socketId === socket.id
+      );
       
       if (playerIndex !== -1) {
         const disconnectedPlayer = room.players[playerIndex];
@@ -241,11 +271,14 @@ io.on('connection', (socket) => {
           room.players.splice(playerIndex, 1);
           console.log(`Игрок ${disconnectedPlayer.name} покинул лобби ${roomCode}`);
         } else {
+          disconnectedPlayer.socketId = null;
           console.log(`Игрок ${disconnectedPlayer.name} отключился от запущенной игры ${roomCode}`);
         }
 
         // Если комната пуста — даем 10 минут на переподключение перед полным удалением
-        const activePlayersCount = room.players.filter(p => io.sockets.adapter.rooms.has(p.id) || p.socketId === p.id).length;
+        const activePlayersCount = room.players.filter(
+          p => p.socketId && io.sockets.sockets.get(p.socketId)
+        ).length;
         if (activePlayersCount === 0 || room.players.length === 0) {
           console.log(`Комната ${roomCode} опустела. Ожидание 10 минут перед удалением...`);
           room.destroyTimer = setTimeout(() => {
