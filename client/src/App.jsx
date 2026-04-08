@@ -64,13 +64,7 @@ function App() {
       setIsDark(true);
     }
 
-    // Keep the Render/Railway connection alive by pinging the backend periodically
-    const envURL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
-    const interval = setInterval(() => {
-      fetch(`${envURL}/ping`).catch(() => {});
-    }, 5 * 60 * 1000); // каждые 5 минут
-
-    return () => clearInterval(interval);
+    // Serverless architecture removes the need for pinging the backend
   }, []);
 
   useEffect(() => {
