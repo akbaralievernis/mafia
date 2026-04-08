@@ -6,8 +6,8 @@ import GameEngine from '../engine/GameEngine';
 import SupabaseIOMock from '../engine/SupabaseIOMock';
 import AIBot from '../engine/AIBot.js';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bqmexkdefmpbwsbyzsfa.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_W22iDeFOad4YzqMKFUCr2A_4POuu-nX';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const SocketContext = createContext();
