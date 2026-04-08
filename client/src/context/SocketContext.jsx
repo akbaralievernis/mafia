@@ -4,6 +4,7 @@ import { VoiceTTS } from '../utils/VoiceTTS';
 import { t } from '../utils/i18n';
 import GameEngine from '../engine/GameEngine';
 import SupabaseIOMock from '../engine/SupabaseIOMock';
+import AIBot from '../engine/AIBot.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -31,6 +32,7 @@ export const SocketProvider = ({ children }) => {
   const engineRef = useRef(null);
   const myIdRef = useRef(`p_${Date.now()}_${Math.floor(Math.random() * 1000)}`);
   const isHostRef = useRef(false);
+  const roomIdRef = useRef(null);
 
   // Unified emitter for client components to use just like socket.io
   const createMockSocket = useCallback((channel) => {
@@ -46,6 +48,7 @@ export const SocketProvider = ({ children }) => {
           
           isHostRef.current = true;
           hostRoomRef.current = newRoom;
+          roomIdRef.current = roomCode;
           
           const newChannel = supabase.channel(`room_${roomCode}`);
           channelRef.current = newChannel;
@@ -67,6 +70,7 @@ export const SocketProvider = ({ children }) => {
           const newChannel = supabase.channel(`room_${roomCode}`);
           channelRef.current = newChannel;
           isHostRef.current = false;
+          roomIdRef.current = roomCode;
           
           newChannel.on('broadcast', { event: 'server_to_client' }, (payload) => handleServerToClientMsg(payload.payload));
           newChannel.subscribe(async (status) => {
@@ -157,11 +161,9 @@ export const SocketProvider = ({ children }) => {
       
       const activePlayersCount = room.players.filter(p => !p.isHost).length;
       if (activePlayersCount < 4) {
-        import('../engine/AIBot.js').then(({ default: AIBot }) => {
-           const bots = AIBot.generateBots(activePlayersCount, 4);
-           room.players.push(...bots);
-           startEngine();
-        });
+         const bots = AIBot.generateBots(activePlayersCount, 4);
+         room.players.push(...bots);
+         startEngine();
       } else {
          startEngine();
       }
@@ -197,8 +199,8 @@ export const SocketProvider = ({ children }) => {
   const handleServerToClientMsg = (payload) => {
     const { event, targetId, data } = payload;
     
-    // Ignore targeted messages not for me
-    if (targetId && targetId !== myIdRef.current) return;
+    // Ignore targeted messages not for me (allow room-wide broadcasts where targetId === roomIdRef.current)
+    if (targetId && targetId !== myIdRef.current && targetId !== roomIdRef.current) return;
 
     if (event === 'callback_reply') {
        if (window[`cb_${myIdRef.current}`]) {
