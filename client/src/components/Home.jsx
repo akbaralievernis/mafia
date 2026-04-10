@@ -86,14 +86,16 @@ export default function Home() {
       socket.emit('join_room', { roomCode: code.toUpperCase(), playerName: name, avatar }, (result) => {
         if (result?.success) {
           setRoomData(result.room);
+          navigate(`/room/${result.room.id}`);
         } else {
-          alert(result?.error || 'Ошибка подключения');
+          alert(result?.error || 'Ошибка подключения. Проверьте код комнаты.');
         }
       });
     } else {
       socket.emit('create_room', { playerName: name, avatar }, (result) => {
         if (result?.success) {
           setRoomData(result.room);
+          navigate(`/room/${result.room.id}`);
         } else {
           alert(result?.error || 'Ошибка создания комнаты');
         }
