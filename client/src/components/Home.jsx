@@ -77,27 +77,25 @@ export default function Home() {
   };
 
   const handleJoin = () => {
-    if (!name.trim()) return alert("Введите имя!");
-    if (!socket) return alert("Нет подключения к серверу");
+    if (!name.trim()) return alert('Введите имя!');
+    if (!socket) return alert('Соединение не установлено');
 
     localStorage.setItem('playerName', name);
-    
+
     if (code.trim()) {
       socket.emit('join_room', { roomCode: code.toUpperCase(), playerName: name, avatar }, (result) => {
-        if (result.success) {
+        if (result?.success) {
           setRoomData(result.room);
-          navigate(`/room/${result.room.id}`);
         } else {
-          alert(result.error || "Ошибка подключения");
+          alert(result?.error || 'Ошибка подключения');
         }
       });
     } else {
       socket.emit('create_room', { playerName: name, avatar }, (result) => {
-        if (result.success) {
+        if (result?.success) {
           setRoomData(result.room);
-          navigate(`/room/${result.room.id}`);
         } else {
-          alert(result.error || "Ошибка создания комнаты");
+          alert(result?.error || 'Ошибка создания комнаты');
         }
       });
     }

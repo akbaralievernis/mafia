@@ -194,21 +194,21 @@ const translations = {
 let currentLang = localStorage.getItem('mafia_lang') || 'ru';
 const listeners = new Set();
 
-export const setLanguage = (lang) => {
+export function setLanguage(lang) {
   if (translations[lang]) {
     currentLang = lang;
     localStorage.setItem('mafia_lang', lang);
     listeners.forEach(listener => listener(lang));
   }
-};
+}
 
-export const getLanguage = () => currentLang;
+export function getLanguage() { return currentLang; }
 
-export const t = (key) => {
+export function t(key) {
   return translations[currentLang][key] || translations['ru'][key] || key;
-};
+}
 
-export const useTranslation = () => {
+export function useTranslation() {
   const [lang, setLangState] = useState(currentLang);
 
   useEffect(() => {
@@ -222,6 +222,6 @@ export const useTranslation = () => {
   }, []);
 
   return { t, lang, setLanguage };
-};
+}
 
 export const i18nTranslations = translations;

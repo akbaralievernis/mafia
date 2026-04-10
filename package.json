@@ -5,5 +5,8 @@
   "scripts": {
     "build": "cd client && npm install && npm run build",
     "install-all": "npm install && cd client && npm install"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.102.1"
   }
 }

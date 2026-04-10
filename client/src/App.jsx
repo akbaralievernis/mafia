@@ -7,7 +7,7 @@ import Game from './components/Game';
 import './styles/theme.css';
 
 const RoomRouter = () => {
-  const { socket, roomData } = useSocket();
+  const { socket, roomData, myPlayerId, isHostPlayer } = useSocket();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,35 +16,21 @@ const RoomRouter = () => {
     }
   }, [roomData, navigate]);
 
-  const playerName = localStorage.getItem('playerName');
-  
-  // Memoized derived values
-  const { myId, isHost } = React.useMemo(() => {
-    if (!roomData) return { myId: null, isHost: false };
-    
-    // In Socket.io version, players might have different IDs
-    const myPlayer = roomData.players?.find(p => p.name === playerName);
-    return {
-      myId: myPlayer ? myPlayer.id : (socket?.id || null),
-      isHost: myPlayer ? myPlayer.isHost : false
-    };
-  }, [roomData, socket, playerName]);
+  const myId = myPlayerId;
+  const isHost = isHostPlayer;
 
   const handleStart = React.useCallback(() => {
-    if (roomData?.id && socket) {
-      socket.emit('start_game', { roomCode: roomData.id });
-    }
-  }, [roomData?.id, socket]);
+    if (socket) socket.emit('start_game', {});
+  }, [socket]);
 
   const handleAction = React.useCallback((targetId) => {
-    if (roomData?.id && socket) {
-      if (roomData.phase === 'night') {
-        socket.emit('night_action', { roomCode: roomData.id, targetId });
-      } else if (roomData.phase === 'vote') {
-        socket.emit('day_vote', { roomCode: roomData.id, targetId });
-      }
+    if (!socket || !roomData) return;
+    if (roomData.phase === 'night') {
+      socket.emit('night_action', { targetId });
+    } else if (roomData.phase === 'vote') {
+      socket.emit('day_vote', { targetId });
     }
-  }, [socket, roomData?.id, roomData?.phase]);
+  }, [socket, roomData]);
 
   if (!roomData || !socket) return null;
 
