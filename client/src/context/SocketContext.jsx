@@ -290,6 +290,48 @@ export const SocketProvider = ({ children }) => {
     }
   }), [setupHostChannel, setupGuestChannel, handleClientToServerMsg]);
 
+  // ─── HOST: Subscribe to game engine events and update roomData ───────────────
+  // The engine emits events through eventBus locally. We listen here and
+  // mirror those updates into React state so the UI re-renders.
+  useEffect(() => {
+    const bus = eventBus.current;
+
+    const onStateUpdate = (data) => {
+      setRoomData(prev => prev ? { ...prev, ...data } : data);
+    };
+    const onGameStarted = (data) => {
+      setRoomData(prev => prev ? { ...prev, ...data } : data);
+    };
+    const onNightSubphase = (data) => {
+      setRoomData(prev => prev ? { ...prev, phase: 'night', subPhase: data.subPhase, timeLeft: data.duration } : prev);
+    };
+    const onDayStarted = (data) => {
+      setRoomData(prev => prev ? { ...prev, ...data, phase: 'day', subPhase: null } : prev);
+    };
+    const onVotingStarted = () => {
+      setRoomData(prev => prev ? { ...prev, phase: 'vote' } : prev);
+    };
+    const onGameOver = (data) => {
+      setRoomData(prev => prev ? { ...prev, ...data.finalState, phase: 'end', gameOverData: data } : prev);
+    };
+
+    bus.on('state_update', onStateUpdate);
+    bus.on('game_started', onGameStarted);
+    bus.on('night_subphase_started', onNightSubphase);
+    bus.on('day_started', onDayStarted);
+    bus.on('voting_started', onVotingStarted);
+    bus.on('game_over', onGameOver);
+
+    return () => {
+      bus.off('state_update', onStateUpdate);
+      bus.off('game_started', onGameStarted);
+      bus.off('night_subphase_started', onNightSubphase);
+      bus.off('day_started', onDayStarted);
+      bus.off('voting_started', onVotingStarted);
+      bus.off('game_over', onGameOver);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ─── Cleanup on unmount ──────────────────────────────────────────────────────
   useEffect(() => {
     return () => {
