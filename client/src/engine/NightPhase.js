@@ -144,13 +144,34 @@ class NightPhase {
     else if (currentRole === 'maniac') allActed = this.maniacTarget !== null;
 
     if (allActed) {
-      // Даже если все сходили, дадим ведущему 3 секунды "на озвучку" перед авто-переходом
-      setTimeout(() => {
-        if (this.state.subPhase === currentRole) {
+      // Останавливаем текущий длинный таймер
+      if (this.timer) clearInterval(this.timer);
+      this.timeLeft = 3; // 3 секунды на переход
+
+      this.timer = setInterval(() => {
+        this.timeLeft -= 1;
+        this.io.to(this.state.id).emit('timer_update', { 
+            timeLeft: this.timeLeft, 
+            phase: this.state.phase, 
+            subPhase: currentRole,
+            isTransition: true 
+        });
+
+        if (this.timeLeft <= 0) {
           clearInterval(this.timer);
-          this.nextSubPhase();
+          if (this.state.subPhase === currentRole) {
+            this.nextSubPhase();
+          }
         }
-      }, 3000);
+      }, 1000);
+      
+      // Сразу отправляем первый апдейт
+      this.io.to(this.state.id).emit('timer_update', { 
+        timeLeft: this.timeLeft, 
+        phase: this.state.phase, 
+        subPhase: currentRole,
+        isTransition: true 
+      });
     }
   }
 

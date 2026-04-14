@@ -200,8 +200,12 @@ class DayPhase {
       exiledPlayerId: exiledPlayerId,
       message: `Город сделал свой суровый выбор. Игрок ${exiledName} изгнан.`
     });
-    this.state.isProcessingPhase = false;
-    if (this.onDayEnd) this.onDayEnd({ exiledPlayerId });
+
+    // Вместо мгновенного завершения даем 5 секунд на осознание
+    this._startTimer(5, () => {
+      this.state.isProcessingPhase = false;
+      if (this.onDayEnd) this.onDayEnd({ exiledPlayerId });
+    }, true);
   }
 
   _finishVotingWithNoOneExiled(msg) {
@@ -209,19 +213,31 @@ class DayPhase {
       exiledPlayerId: null,
       message: msg
     });
-    this.state.isProcessingPhase = false;
-    if (this.onDayEnd) this.onDayEnd({ exiledPlayerId: null });
+
+    // Даем 5 секунд перед ночью
+    this._startTimer(5, () => {
+      this.state.isProcessingPhase = false;
+      if (this.onDayEnd) this.onDayEnd({ exiledPlayerId: null });
+    }, true);
   }
 
-  _startTimer(seconds, onExpireCallback) {
+  _startTimer(seconds, onExpireCallback, isTransition = false) {
     if (this.timer) clearInterval(this.timer);
     this.timeLeft = seconds;
     
-    this.io.to(this.state.id).emit('timer_update', { timeLeft: this.timeLeft, phase: this.state.phase });
+    this.io.to(this.state.id).emit('timer_update', { 
+        timeLeft: this.timeLeft, 
+        phase: this.state.phase,
+        isTransition: isTransition 
+    });
 
     this.timer = setInterval(() => {
       this.timeLeft -= 1;
-      this.io.to(this.state.id).emit('timer_update', { timeLeft: this.timeLeft, phase: this.state.phase });
+      this.io.to(this.state.id).emit('timer_update', { 
+          timeLeft: this.timeLeft, 
+          phase: this.state.phase,
+          isTransition: isTransition 
+      });
 
       if (this.timeLeft <= 0) {
         clearInterval(this.timer);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useTranslation } from '../utils/i18n';
 
 /**
@@ -9,12 +10,14 @@ import { useTranslation } from '../utils/i18n';
 const PhaseTimer = ({ socket, initialTime, phase }) => {
   const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState(initialTime || null);
+  const [isTransition, setIsTransition] = useState(false);
 
   useEffect(() => {
     if (!socket) return;
 
     const handleTimer = (data) => {
       setTimeLeft(data.timeLeft);
+      setIsTransition(data.isTransition || false);
     };
 
     socket.on('timer_update', handleTimer);
@@ -24,25 +27,41 @@ const PhaseTimer = ({ socket, initialTime, phase }) => {
     };
   }, [socket]);
 
-  // Сброс при смене фазы (опционально, так как сервер пришлет новые данные)
-  useEffect(() => {
-    // Не сбрасываем принудительно, доверяем серверу
-  }, [phase]);
-
   if (timeLeft === null) return null;
 
-  const isLowTime = timeLeft <= 10;
+  const isLowTime = timeLeft <= 5;
+  const timerColor = isTransition 
+    ? 'var(--accent-purple)' 
+    : isLowTime ? 'var(--accent-red)' : 'var(--accent-blue)';
 
   return (
-    <p style={{ 
-      marginTop: '0.3rem', 
-      fontSize: '1.2rem', 
-      fontWeight: 'bold', 
-      color: isLowTime ? 'var(--accent-red)' : 'var(--accent-blue)',
-      transition: 'color 0.3s ease'
-    }}>
-      {t('time_left')} {timeLeft} {t('sec')}
-    </p>
+    <div style={{ textAlign: 'center' }}>
+      <p style={{ 
+        marginTop: '0.3rem', 
+        fontSize: '1rem', 
+        fontWeight: 'bold', 
+        color: timerColor,
+        transition: 'color 0.3s ease',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5rem'
+      }}>
+        <span style={{ fontSize: '0.7rem', opacity: 0.8, textTransform: 'uppercase' }}>
+            {isTransition ? 'Переход через:' : t('time_left')}
+        </span>
+        <span style={{ fontSize: '1.4rem' }}>{timeLeft}</span>
+        <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>{t('sec')}</span>
+      </p>
+      {isTransition && (
+        <motion.div 
+            initial={{ width: 0 }} 
+            animate={{ width: '100%' }} 
+            transition={{ duration: timeLeft, ease: 'linear' }}
+            style={{ height: '2px', background: 'var(--accent-purple)', marginTop: '4px' }} 
+        />
+      )}
+    </div>
   );
 };
 
