@@ -83,6 +83,31 @@ class GameEngine {
     }
     return { error: 'Чат недоступен в текущей фазе' };
   }
+
+  handleHostAdvanceNight() {
+    if (this.state.phase === 'night' && this.nightPhase) {
+      clearInterval(this.nightPhase.timer);
+      this.nightPhase.nextSubPhase();
+      return { success: true };
+    }
+    return { error: 'Невозможно переключить фазу сейчас' };
+  }
+
+  handleHostStartVoting() {
+    if (this.state.phase === 'day' && this.dayPhase) {
+      this.dayPhase.forceStartVoting();
+      return { success: true };
+    }
+    return { error: 'Невозможно начать голосование сейчас' };
+  }
+
+  handleHostEndDay() {
+    if ((this.state.phase === 'day' || this.state.phase === 'vote') && this.dayPhase) {
+      this.dayPhase.forceEndDay();
+      return { success: true };
+    }
+    return { error: 'Невозможно завершить день сейчас' };
+  }
 }
 
 export default GameEngine;

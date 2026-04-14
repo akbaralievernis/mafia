@@ -8,7 +8,7 @@ class GameState {
     this.subPhase = null;
     this.round = 0;
     this.votes = {};
-    this.actions = { don: null, mafia: [], doctor: null, detective: null, maniac: null };
+    this.actions = { don: null, mafia: {}, doctor: null, detective: null, maniac: null, putana: null, bodyguard: null };
     this.isProcessingPhase = false; 
   }
 
@@ -62,10 +62,12 @@ class GameState {
 
     switch (role) {
       case 'don': this.actions.don = targetId; break;
-      case 'mafia': this.actions.mafia.push(targetId); break;
+      case 'mafia': this.actions.mafia[playerId] = targetId; break;
       case 'doctor': this.actions.doctor = targetId; break;
       case 'detective': this.actions.detective = targetId; break;
       case 'maniac': this.actions.maniac = targetId; break;
+      case 'putana': this.actions.putana = targetId; break;
+      case 'bodyguard': this.actions.bodyguard = targetId; break;
       default: return false;
     }
     return true;
@@ -83,7 +85,7 @@ class GameState {
   }
 
   resetActions() {
-    this.actions = { don: null, mafia: [], doctor: null, detective: null, maniac: null };
+    this.actions = { don: null, mafia: {}, doctor: null, detective: null, maniac: null, putana: null, bodyguard: null };
   }
 
   getSanitizedState(playerId) {
@@ -111,14 +113,21 @@ class GameState {
 
   _getVisibleRoles(isMafiaTeam, myId) {
     const visibleRoles = {};
+    const myPlayer = this.players.find(p => p.id === myId);
+    
+    // Ведущий видит ВСЕ роли
+    if (myPlayer?.isHost) return this.roles;
+    
     if (this.roles[myId] === 'spectator') return visibleRoles;
+    
     if (isMafiaTeam) {
       Object.keys(this.roles).forEach(id => {
         if (this.roles[id] === 'mafia' || this.roles[id] === 'don') visibleRoles[id] = this.roles[id];
       });
-    } else {
-      if (this.roles[myId]) visibleRoles[myId] = this.roles[myId];
     }
+    
+    if (this.roles[myId]) visibleRoles[myId] = this.roles[myId];
+    
     return visibleRoles;
   }
 }

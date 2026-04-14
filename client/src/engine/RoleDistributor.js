@@ -8,17 +8,35 @@ class RoleDistributor {
     if (count < 4) throw new Error("Недостаточно игроков для старта игры (минимум 4 помимо создателя)");
 
     const rolesArray = [];
-    let mafiaCount = Math.floor(count / 4) || 1; 
+    let mafiaCount = 1;
     
-    if (count >= 10) {
+    if (count >= 5 && count <= 8) mafiaCount = 1;
+    if (count >= 9 && count <= 12) mafiaCount = 2;
+    if (count >= 13) mafiaCount = 3;
+
+    // Спец роли для мафии
+    if (count >= 7) {
       rolesArray.push('don'); 
       mafiaCount = Math.max(1, mafiaCount - 1);
-      rolesArray.push('maniac'); 
     }
 
     for (let i = 0; i < mafiaCount; i++) rolesArray.push('mafia');
+    
+    // Спец роли для мирных
     rolesArray.push('doctor');
     rolesArray.push('detective'); 
+
+    if (count >= 10) {
+      rolesArray.push('maniac'); 
+    }
+
+    if (count >= 12) {
+      rolesArray.push('putana'); // Блокирует действия
+    }
+
+    if (count >= 14) {
+      rolesArray.push('bodyguard'); // Защищает ценой жизни
+    }
 
     const citizensCount = count - rolesArray.length;
     for (let i = 0; i < citizensCount; i++) rolesArray.push('citizen');

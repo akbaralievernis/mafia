@@ -15,26 +15,42 @@ const PlayerCard = ({
   canSelect, 
   roleName, 
   votes, 
-  isVoting 
+  isVoting,
+  isHostView = false
 }) => {
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'mafia': case 'don': return 'var(--accent-red)';
+      case 'doctor': case 'detective': return 'var(--accent-blue)';
+      case 'maniac': return '#ff8c00';
+      case 'putana': return 'var(--accent-purple)';
+      case 'bodyguard': return '#4caf50';
+      default: return 'var(--text-secondary)';
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: isDead ? 0.35 : 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className={`player-card ${isSelected ? 'selected' : ''} ${isDead ? 'dead' : ''}`}
-      onClick={() => !isDead && onSelect(player.id)}
+      className={`player-card ${isSelected ? 'selected' : ''} ${isDead ? 'dead' : ''} ${isHostView ? 'host-view' : ''}`}
+      onClick={() => !isDead && onSelect && onSelect(player.id)}
       whileTap={{ scale: canSelect && !isDead ? 0.98 : 1 }}
-      style={{ willChange: 'transform, opacity' }}
+      style={{ 
+        willChange: 'transform, opacity',
+        padding: '0.8rem 0.5rem',
+        minWidth: isHostView ? '100px' : '120px'
+      }}
     >
       <div className="player-number">{index + 1}</div>
       
-      {/* Аватар */}
       <div style={{ 
-        width: '60px', height: '60px', 
+        width: isHostView ? '45px' : '60px', 
+        height: isHostView ? '45px' : '60px', 
         borderRadius: '50%', 
         background: isDead ? '#222' : 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.2))',
-        margin: '0 auto 1rem auto',
+        margin: '0 auto 0.5rem auto',
         border: isSelected ? '2px solid var(--accent-red)' : '1px solid var(--glass-border)',
         overflow: 'hidden',
         display: 'flex',
@@ -45,27 +61,44 @@ const PlayerCard = ({
         {player.avatar ? (
           <img src={player.avatar} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDead ? 0.2 : 1 }} />
         ) : (
-          <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>👤</span>
+          <span style={{ fontSize: isHostView ? '1rem' : '1.5rem', opacity: 0.5 }}>👤</span>
         )}
       </div>
       
-      <h4 style={{ fontWeight: 600, fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <h4 style={{ 
+        fontWeight: 600, 
+        fontSize: isHostView ? '0.8rem' : '0.9rem', 
+        overflow: 'hidden', 
+        textOverflow: 'ellipsis', 
+        whiteSpace: 'nowrap',
+        marginBottom: '2px'
+      }}>
         {player.name}
       </h4>
       
       {roleName && (
-        <p style={{ fontSize: '0.75rem', color: 'var(--accent-purple)', marginTop: '0.3rem', fontWeight: 700 }}>
+        <p style={{ 
+          fontSize: '0.65rem', 
+          color: getRoleColor(roleName), 
+          marginTop: '0.2rem', 
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
           {roleName}
         </p>
       )}
 
-      {/* Отображение голосов */}
+      {isDead && !roleName && (
+         <p style={{ fontSize: '0.65rem', color: 'var(--accent-red)', marginTop: '0.2rem' }}>ВЫБЫЛ</p>
+      )}
+
       {isVoting && votes > 0 && (
         <motion.div 
           initial={{ scale: 0 }} 
           animate={{ scale: 1 }} 
           style={{ 
-            marginTop: '0.6rem', 
+            marginTop: '0.4rem', 
             background: 'rgba(255, 42, 95, 0.25)', 
             padding: '2px 8px', 
             borderRadius: '10px', 
@@ -83,9 +116,9 @@ const PlayerCard = ({
         <motion.div 
           initial={{ scale: 0 }} 
           animate={{ scale: 1 }} 
-          style={{ position: 'absolute', top: 10, right: 10, background: 'var(--accent-red)', borderRadius: '50%', padding: '4px', boxShadow: '0 0 10px rgba(255,42,95,0.5)' }}
+          style={{ position: 'absolute', top: 5, right: 5, background: 'var(--accent-red)', borderRadius: '50%', padding: '3px', boxShadow: '0 0 10px rgba(255,42,95,0.5)' }}
         >
-          <Check size={12} color="#fff" strokeWidth={3} />
+          <Check size={10} color="#fff" strokeWidth={3} />
         </motion.div>
       )}
     </motion.div>

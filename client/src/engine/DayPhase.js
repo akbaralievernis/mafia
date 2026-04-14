@@ -35,9 +35,26 @@ class DayPhase {
     });
 
     this._broadcastState();
-    this._startTimer(60, () => {
+    
+    // Даем больше времени на обсуждение для ведущего
+    this._startTimer(120, () => {
       this.startVoting(); 
     });
+  }
+
+  forceStartVoting() {
+    if (this.subPhase === 'discussion') {
+      clearInterval(this.timer);
+      this.startVoting();
+    }
+  }
+
+  forceEndDay() {
+    if (this.subPhase === 'voting' || this.subPhase === 'revoting') {
+      clearInterval(this.timer);
+      if (this.subPhase === 'revoting') this.endRevote();
+      else this.endDay();
+    }
   }
 
   startVoting() {

@@ -6,6 +6,8 @@ import Lobby from './components/Lobby';
 import Game from './components/Game';
 import './styles/theme.css';
 
+import HostDashboard from './components/HostDashboard';
+
 const RoomRouter = () => {
   const { socket, roomData, myPlayerId, isHostPlayer } = useSocket();
   const navigate = useNavigate();
@@ -36,6 +38,11 @@ const RoomRouter = () => {
 
   if (roomData.status === 'lobby') {
     return <Lobby roomData={roomData} isHost={isHost} onStart={handleStart} />;
+  }
+
+  // Если это хост (ведущий), показываем ему панель управления
+  if (isHost && roomData.phase !== 'lobby') {
+    return <HostDashboard gameState={roomData} socket={socket} />;
   }
 
   return <Game gameState={roomData} myId={myId} onAction={handleAction} isHost={isHost} />;

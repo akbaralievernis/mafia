@@ -45,6 +45,11 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  transition: background 1.5s ease-in-out, filter 0.8s ease;
+}
+
+body.night-mode {
+  filter: brightness(0.6) contrast(1.1) saturate(0.8);
 }
 
 /* Стеклянный контейнер/карточка */
@@ -111,9 +116,16 @@ body {
 
 .grid-players {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.8rem;
   width: 100%;
+}
+
+@media (max-width: 600px) {
+  .grid-players {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+  }
 }
 
 /* Карточка игрока (мобильный UI) */
