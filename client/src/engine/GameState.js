@@ -113,21 +113,31 @@ class GameState {
 
   _getVisibleRoles(isMafiaTeam, myId) {
     const visibleRoles = {};
-    const myPlayer = this.players.find(p => p.id === myId);
     
-    // Ведущий видит ВСЕ роли
-    if (myPlayer?.isHost) return this.roles;
-    
-    if (this.roles[myId] === 'spectator') return visibleRoles;
-    
+    // 1. Раскрываем роли всех погибших игроков
+    Object.keys(this.roles).forEach(id => {
+      if (!this.alivePlayers.includes(id)) {
+        visibleRoles[id] = this.roles[id];
+      }
+    });
+
+    // 2. Раскрываем свою роль
+    if (this.roles[myId]) {
+      visibleRoles[myId] = this.roles[myId];
+    }
+
+    // 3. Мафия видит только своих (живых и мертвых)
     if (isMafiaTeam) {
       Object.keys(this.roles).forEach(id => {
-        if (this.roles[id] === 'mafia' || this.roles[id] === 'don') visibleRoles[id] = this.roles[id];
+        if (this.roles[id] === 'mafia' || this.roles[id] === 'don') {
+          visibleRoles[id] = this.roles[id];
+        }
       });
     }
-    
-    if (this.roles[myId]) visibleRoles[myId] = this.roles[myId];
-    
+
+    // Управляющий больше не видит чужие роли, пока они живы.
+    // Это исключает утечку информации при демонстрации экрана.
+
     return visibleRoles;
   }
 }
