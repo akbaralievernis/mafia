@@ -195,12 +195,12 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }}
         style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100vw', minHeight: '100vh',
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh',
           background: isMafiaWin || isManiacWin 
             ? 'radial-gradient(circle at center, #300 0%, #000 100%)' 
             : 'radial-gradient(circle at center, #001a33 0%, #000 100%)',
           zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', overflowY: 'auto',
-          padding: '40px 20px'
+          padding: '20px'
         }}
       >
         {/* Particle Background Effect */}
@@ -233,13 +233,13 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
           <motion.div
              initial={{ rotate: -10, scale: 0.5 }}
              animate={{ rotate: 0, scale: 1 }}
-             style={{ fontSize: '5rem', marginBottom: '1rem' }}
+             style={{ fontSize: '4rem', marginBottom: '0.5rem' }}
           >
             {isMafiaWin ? '💀' : isManiacWin ? '🔪' : '🏆'}
           </motion.div>
 
           <h1 style={{ 
-            fontSize: '3.5rem', fontWeight: 900, marginBottom: '0.5rem',
+            fontSize: '2.8rem', fontWeight: 900, marginBottom: '0.5rem',
             color: themeColor, textShadow: `0 0 20px ${themeColor}`
           }}>
             {t('game_over')}
@@ -249,13 +249,13 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
             {isMafiaWin ? t('winners_mafia') : isManiacWin ? t('winners_maniac') : t('winners_citizens')}
           </h2>
 
-          <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+          <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem', lineHeight: '1.4' }}>
             {gameOverData?.message}
           </p>
 
-          <div style={{ marginBottom: '3rem' }}>
-            <h3 style={{ fontSize: '0.9rem', color: themeColor, textTransform: 'uppercase', marginBottom: '1rem' }}>Итоги ролей</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '0.8rem', color: themeColor, textTransform: 'uppercase', marginBottom: '0.8rem' }}>Итоги ролей</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '0.6rem' }}>
               {players.filter(p => !p.isHost).map(p => (
                 <div key={p.id} style={{ 
                     padding: '0.8rem', background: 'rgba(255,255,255,0.03)', 
