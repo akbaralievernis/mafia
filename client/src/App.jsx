@@ -41,7 +41,8 @@ const RoomRouter = () => {
   }
 
   // Если это хост (ведущий), показываем ему панель управления
-  if (isHost && roomData.phase !== 'lobby') {
+  // Но как только игра заканчивается, показываем общий экран победителей
+  if (isHost && roomData.phase !== 'lobby' && roomData.phase !== 'end') {
     return <HostDashboard gameState={roomData} socket={socket} />;
   }
 

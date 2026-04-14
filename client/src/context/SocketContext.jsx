@@ -142,6 +142,17 @@ export const SocketProvider = ({ children }) => {
       engineRef.current.handleHostStartVoting();
     } else if (event === 'host_end_day' && engineRef.current) {
       engineRef.current.handleHostEndDay();
+    } else if (event === 'reset_game') {
+      room.status = 'lobby';
+      room.phase = 'lobby';
+      room.round = 0;
+      room.players = room.players.map(p => ({
+        ...p,
+        isAlive: true,
+        role: null
+      }));
+      engineRef.current = null;
+      pushRoomUpdate();
     }
   }, [broadcastToGuests]);
 

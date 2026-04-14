@@ -82,7 +82,9 @@ const translations = {
     game_over: 'ИГРА ОКОНЧЕНА',
     winners_mafia: 'Победила Мафия 🩸',
     winners_citizens: 'Мирные жители спасли город 🛡️',
-    return_to_lobby: 'Вернуться на главную',
+    winners_maniac: 'Выживших больше нет. Победил Маньяк! 🔪',
+    return_to_lobby: 'Вернуться в лобби',
+    home: 'На главную',
 
     // TTS Fallbacks
     tts_night_starts: 'Наступает ночь. Город засыпает.',
@@ -176,7 +178,9 @@ const translations = {
     game_over: 'SPIEL BEENDET',
     winners_mafia: 'Die Mafia gewinnt 🩸',
     winners_citizens: 'Die Bürger haben die Stadt gerettet 🛡️',
-    return_to_lobby: 'Zurück zum Hauptmenü',
+    winners_maniac: 'Keine Überlebenden. Der Maniac gewinnt! 🔪',
+    return_to_lobby: 'Zurück zur Lobby',
+    home: 'Hauptmenü',
 
     // TTS Fallbacks
     tts_night_starts: 'Die Nacht beginnt. Die Stadt schläft ein.',
