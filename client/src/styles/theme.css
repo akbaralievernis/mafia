@@ -14,7 +14,7 @@
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 10px 25px 0 rgba(0, 0, 0, 0.5);
-  --glass-blur: blur(8px);
+  --glass-blur: blur(4px); /* Уменьшено размытие для производительности */
 
   --radius-lg: 32px;
   --radius-md: 20px;
@@ -55,14 +55,14 @@ body.night-mode {
 /* Стеклянный контейнер/карточка */
 .glass-panel {
   background: var(--glass-bg);
+  /* Используем backdrop-filter только если он не перегружает систему */
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
-  padding: 2.5rem;
+  padding: 2rem;
+  transform: translateZ(0); /* Аппаратное ускорение */
 }
 
 /* Элементы управления */
@@ -131,15 +131,15 @@ body.night-mode {
 /* Карточка игрока (мобильный UI) */
 .player-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.08); /* Чуть плотнее фон вместо блюра */
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  padding: 1.5rem 1rem;
+  padding: 1rem;
   text-align: center;
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.2s ease-out;
-  will-change: transform, opacity;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transform: translateZ(0); /* Стабильное ускорение без memory leak */
 }
 
 .player-card:hover {

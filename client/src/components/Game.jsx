@@ -224,7 +224,7 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
 
   return (
     <div className="game-container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <motion.div layout className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
+      <motion.div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             {isNight ? <Moon size={24} color="var(--accent-purple)" /> : <Sun size={24} color="#FFD700" />}
@@ -257,7 +257,7 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
 
       <AnimatePresence mode="popLayout">
         {canSelect && !hasActed && (
-          <motion.div transition={{ type: 'spring' }} key="actionBanner" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel" style={{ padding: '0.8rem', border: '1px solid var(--accent-red)', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <motion.div transition={{ type: 'tween' }} key="actionBanner" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-panel" style={{ padding: '0.8rem', border: '1px solid var(--accent-red)', display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <ShieldAlert size={20} color="var(--accent-red)" />
             <div>
               <p style={{ fontWeight: 700, fontSize: '0.85rem' }}>{t('action_required')}</p>
@@ -276,7 +276,18 @@ const Game = React.memo(({ gameState, myId, onAction, isHost }) => {
         {players.map((p, index) => {
           if (p.isHost) return null;
           return (
-            <PlayerCard key={p.id} player={p} index={index} isDead={!alivePlayers.includes(p.id)} isSelected={selectedId === p.id} onSelect={handleSelect} canSelect={canSelect && !hasActed} roleName={roles[p.id]} votes={currentVotes[p.id] || 0} isVoting={isVoting} />
+            <PlayerCard 
+              key={p.id} 
+              player={p} 
+              index={index} 
+              isDead={!alivePlayers.includes(p.id)} 
+              isSelected={selectedId === p.id} 
+              onSelect={handleSelect} 
+              canSelect={canSelect && !hasActed} 
+              roleName={roles[p.id]} 
+              votes={currentVotes[p.id] || 0} 
+              isVoting={isVoting} 
+            />
           );
         })}
       </div>

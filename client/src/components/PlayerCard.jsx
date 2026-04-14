@@ -2,9 +2,20 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
+const getRoleColor = (role) => {
+  switch (role) {
+    case 'mafia': case 'don': return 'var(--accent-red)';
+    case 'doctor': case 'detective': return 'var(--accent-blue)';
+    case 'maniac': return '#ff8c00';
+    case 'putana': return 'var(--accent-purple)';
+    case 'bodyguard': return '#4caf50';
+    default: return 'var(--text-secondary)';
+  }
+};
+
 /**
  * Мемоизированный компонент карточки игрока.
- * Перерисовывается только если изменились его конкретные данные.
+ * Оптимизирован для 60 FPS при 15 игроках.
  */
 const PlayerCard = ({ 
   player, 
@@ -18,27 +29,16 @@ const PlayerCard = ({
   isVoting,
   isHostView = false
 }) => {
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'mafia': case 'don': return 'var(--accent-red)';
-      case 'doctor': case 'detective': return 'var(--accent-blue)';
-      case 'maniac': return '#ff8c00';
-      case 'putana': return 'var(--accent-purple)';
-      case 'bodyguard': return '#4caf50';
-      default: return 'var(--text-secondary)';
-    }
-  };
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: isDead ? 0.35 : 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isDead ? 0.35 : 1 }}
+      transition={{ duration: 0.15, type: 'tween' }}
       className={`player-card ${isSelected ? 'selected' : ''} ${isDead ? 'dead' : ''} ${isHostView ? 'host-view' : ''}`}
       onClick={() => !isDead && onSelect && onSelect(player.id)}
       whileTap={{ scale: canSelect && !isDead ? 0.98 : 1 }}
       style={{ 
-        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
         padding: '0.8rem 0.5rem',
         minWidth: isHostView ? '100px' : '120px'
       }}
@@ -56,7 +56,8 @@ const PlayerCard = ({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative'
+        position: 'relative',
+        transform: 'translateZ(0)'
       }}>
         {player.avatar ? (
           <img src={player.avatar} alt={player.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isDead ? 0.2 : 1 }} />
@@ -97,6 +98,7 @@ const PlayerCard = ({
         <motion.div 
           initial={{ scale: 0 }} 
           animate={{ scale: 1 }} 
+          transition={{ type: 'tween', duration: 0.1 }}
           style={{ 
             marginTop: '0.4rem', 
             background: 'rgba(255, 42, 95, 0.25)', 
@@ -125,5 +127,4 @@ const PlayerCard = ({
   );
 };
 
-// CRITICAL: memo prevents re-renders when other players or timer change
 export default React.memo(PlayerCard);
