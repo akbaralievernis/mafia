@@ -29,8 +29,10 @@ export default class SupabaseIOMock {
     const isBroadcast = !targetId || targetId === this.roomId;
     return {
       emit: (event, data) => {
-        // Fire locally for the host
-        this.eventBus.emit(event, data);
+        // Fire locally for the host ONLY if it's a broadcast or targeted at the host
+        if (isBroadcast || targetId === this.hostId) {
+          this.eventBus.emit(event, data);
+        }
 
         // Send over Supabase to guests
         this.channel?.send({
