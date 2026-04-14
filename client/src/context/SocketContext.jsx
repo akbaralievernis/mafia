@@ -136,6 +136,12 @@ export const SocketProvider = ({ children }) => {
       engineRef.current.handleDayVote(data.senderId, data.targetId);
     } else if (event === 'send_chat_message' && engineRef.current) {
       engineRef.current.handleChatMessage(data.senderId, data.message);
+    } else if (event === 'host_advance_night' && engineRef.current) {
+      engineRef.current.handleHostAdvanceNight();
+    } else if (event === 'host_start_voting' && engineRef.current) {
+      engineRef.current.handleHostStartVoting();
+    } else if (event === 'host_end_day' && engineRef.current) {
+      engineRef.current.handleHostEndDay();
     }
   }, [broadcastToGuests]);
 
